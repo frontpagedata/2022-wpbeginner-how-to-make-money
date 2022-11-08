@@ -1,5 +1,49 @@
 ---
 title: "Data Cleaning and Preparation"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
+
+
+
+
+  
+
+```{r}
+
+install.packages('rairtable')
+
+library(tidyverse)
+library(rairtable)
+
+#set_airtable_api_key('keyqGzdUDWPizo9Yr', install = TRUE)
+
+
+
+```
+
+#reading airtable fields from https://airtable.com/shrp2muCL01zHBzhT 
+
+```{r}
+
+youtube_uRLs <- airtable('Youtube URLs', 'appdLcbl8vtItAvjd')
+youtube_uRLs <- read_airtable(youtube_uRLs)
+
+youtube_urls_meta <- airtable('Youtube URLs meta', 'appdLcbl8vtItAvjd')
+youtube_urls_meta <- read_airtable(youtube_urls_meta)
+
+tiktok_uRLs <- airtable('TikTok URLS', 'appdLcbl8vtItAvjd')
+tiktok_uRLs <- read_airtable(tiktok_uRLs)
+  
+video_stats <- airtable('Video Stats', 'appdLcbl8vtItAvjd')
+video_stats <- read_airtable(video_stats)
+
+activities_data <- airtable('Activities Data', 'appdLcbl8vtItAvjd')
+activities_data <- read_airtable(activities_data)
+
+
+
+
+```
 
