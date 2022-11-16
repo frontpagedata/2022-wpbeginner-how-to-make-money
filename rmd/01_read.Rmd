@@ -10,11 +10,14 @@ editor_options:
 
   
 
-```{r}
+```{r, setup}
 
 install.packages('rairtable')
 
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(urltools)
+library(janitor)
 library(rairtable)
 
 #set_airtable_api_key('keyqGzdUDWPizo9Yr', install = TRUE)
@@ -23,27 +26,43 @@ library(rairtable)
 
 ```
 
-#reading airtable fields from https://airtable.com/shrp2muCL01zHBzhT 
+# reading airtable fields from https://airtable.com/shrp2muCL01zHBzhT 
 
-```{r}
+```{r, import from airtable}
 
-youtube_uRLs <- airtable('Youtube URLs', 'appdLcbl8vtItAvjd')
-youtube_uRLs <- read_airtable(youtube_uRLs)
-
+youtube_urls <- airtable('Youtube URLs', 'appdLcbl8vtItAvjd')
+youtube_urls <- read_airtable(youtube_urls) %>% as_tibble() %>%  clean_names()
+# YT video metadata
 youtube_urls_meta <- airtable('Youtube URLs meta', 'appdLcbl8vtItAvjd')
-youtube_urls_meta <- read_airtable(youtube_urls_meta)
+youtube_urls_meta <- read_airtable(youtube_urls_meta) %>% as_tibble() %>%  clean_names()
 
 tiktok_uRLs <- airtable('TikTok URLS', 'appdLcbl8vtItAvjd')
 tiktok_uRLs <- read_airtable(tiktok_uRLs)
   
 video_stats <- airtable('Video Stats', 'appdLcbl8vtItAvjd')
-video_stats <- read_airtable(video_stats)
+video_stats <- read_airtable(video_stats) %>% as_tibble() %>%  clean_names()
 
 activities_data <- airtable('Activities Data', 'appdLcbl8vtItAvjd')
-activities_data <- read_airtable(activities_data)
+activities_data <- read_airtable(activities_data) %>% as_tibble() %>%  clean_names()
 
 
 
 
+```
+
+
+```{r, check urls}
+# parse urls for video ID without the timestamps 
+youtube_urls <-  youtube_urls %>% mutate(yt_video_id=param_get(video_url)$v)
+youtube_urls_meta <- youtube_urls_meta %>% mutate(yt_video_id=video_id)
+```
+
+```{r, parse subscribers}
+youtube_urls_meta %>% mutate(subs_numeric=str_remove(subscriber_count,"[a-z]+")) %>% 
+  mutate(mult_fact =case_when(str_detect(subs_numeric,"K")~1000,
+                              str_detect(subs_numeric,"M")~1000000)) %>% 
+  mutate(subs_numeric=as.numeric(str_remove(subs_numeric,"[A-Z ]"))) %>% 
+  mutate(subs_numeric=subs_numeric*mult_fact) %>% View
+  pull(subs_numeric)
 ```
 
