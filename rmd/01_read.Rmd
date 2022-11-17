@@ -5,20 +5,18 @@ editor_options:
   chunk_output_type: console
 ---
 
-
-
-
-  
-
 ```{r, setup}
 
-install.packages('rairtable')
+# install.packages('rairtable')
 
-library(dplyr)
-library(tidyr)
-library(urltools)
-library(janitor)
-library(rairtable)
+library(dplyr)     # CRAN v1.0.10
+library(tidyr)     # CRAN v1.2.1
+library(urltools)  # CRAN v1.7.3
+library(janitor)   # CRAN v2.1.0
+library(rairtable) # CRAN v0.1.1
+library(stringr)   # CRAN v1.4.1
+library(readr)     # CRAN v2.1.3
+library(here)
 
 #set_airtable_api_key('keyqGzdUDWPizo9Yr', install = TRUE)
 
@@ -31,13 +29,15 @@ library(rairtable)
 ```{r, import from airtable}
 
 youtube_urls <- airtable('Youtube URLs', 'appdLcbl8vtItAvjd')
-youtube_urls <- read_airtable(youtube_urls) %>% as_tibble() %>%  clean_names()
+youtube_urls <- read_airtable(youtube_urls) %>% as_tibble() %>%  clean_names() %>% 
+   filter(!if_all(c(title,video_url),is.na))
 # YT video metadata
 youtube_urls_meta <- airtable('Youtube URLs meta', 'appdLcbl8vtItAvjd')
-youtube_urls_meta <- read_airtable(youtube_urls_meta) %>% as_tibble() %>%  clean_names()
+youtube_urls_meta <- read_airtable(youtube_urls_meta) %>% as_tibble() %>%  clean_names() %>% 
+  filter(!if_all(c(video_url,description),is.na))
 
 tiktok_uRLs <- airtable('TikTok URLS', 'appdLcbl8vtItAvjd')
-tiktok_uRLs <- read_airtable(tiktok_uRLs)
+tiktok_uRLs <- read_airtable(tiktok_uRLs) %>% as_tibble() %>%  clean_names()
   
 video_stats <- airtable('Video Stats', 'appdLcbl8vtItAvjd')
 video_stats <- read_airtable(video_stats) %>% as_tibble() %>%  clean_names()
@@ -45,24 +45,74 @@ video_stats <- read_airtable(video_stats) %>% as_tibble() %>%  clean_names()
 activities_data <- airtable('Activities Data', 'appdLcbl8vtItAvjd')
 activities_data <- read_airtable(activities_data) %>% as_tibble() %>%  clean_names()
 
-
-
-
 ```
+
+
+```{r, split video_stats by source}
+yt_video_stats <- video_stats %>% filter(str_detect(video_url,"youtube.com"))
+tt_video_stats <- video_stats %>%  filter(str_detect(video_url,"tiktok.com"))
+```
+
+
+```{r, split activities data by source}
+yt_activities_data <- activities_data %>% filter(str_detect(video_url,"youtube.com"))
+tt_activities_data <- video_stats %>%  filter(str_detect(video_url,"tiktok.com"))
+```
+
 
 
 ```{r, check urls}
-# parse urls for video ID without the timestamps 
-youtube_urls <-  youtube_urls %>% mutate(yt_video_id=param_get(video_url)$v)
-youtube_urls_meta <- youtube_urls_meta %>% mutate(yt_video_id=video_id)
+# parse urls for yt video ID without the timestamps and for 'shorts'
+youtube_urls <-  youtube_urls %>% mutate(yt_video_id=param_get(video_url)$v) %>% 
+  mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id))
+youtube_urls_meta <- youtube_urls_meta %>% mutate(yt_video_id=video_id) %>% mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id)) %>% select(-video_id)
+yt_video_stats <- yt_video_stats %>% mutate(yt_video_id=param_get(video_url)$v) %>% mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id))
+yt_activities_data <- yt_activities_data %>% mutate(yt_video_id=param_get(video_url)$v) %>% mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id)) 
 ```
 
+
+```{r remove columns with all duplicates}
+youtube_urls <- youtube_urls %>% select(where(~ n_distinct(.) > 1)) # drops the 'annotated' var
+youtube_urls_meta <- youtube_urls_meta %>% select(where(~ n_distinct(.) > 1)) # dropped family_safe, live, error
+```
+
+```{r, drop variables repeated across related datasets}
+youtube_urls <- youtube_urls %>% select(-title)
+# url 2 not needed, shorts are dealt with separately
+youtube_urls_meta <- youtube_urls_meta %>% select(-video_url,-video_url_2)
+yt_activities_data <-  yt_activities_data %>% select(-video_url)
+yt_video_stats <- yt_video_stats %>% select(-video_url)
+```
+
+
+```{r, unnest business types and skills}
+yt_activities_data <- yt_activities_data %>% group_by(yt_video_id) %>% unnest(business_type_level_1) %>% unnest(business_type_level_2) %>% unnest(skills_required) %>% ungroup()
+```
+
+```{r, join yt data, metadata, and stats}
+youtube_data <- 
+  left_join(youtube_urls,youtube_urls_meta,by = "yt_video_id") %>%
+  filter(!is.na(description)) %>% 
+  left_join(yt_video_stats,by = "yt_video_id") 
+```
+
+
 ```{r, parse subscribers}
-youtube_urls_meta %>% mutate(subs_numeric=str_remove(subscriber_count,"[a-z]+")) %>% 
+youtube_data <- 
+youtube_data %>% mutate(subs_numeric=str_remove(subscriber_count,"[a-z]+")) %>% 
   mutate(mult_fact =case_when(str_detect(subs_numeric,"K")~1000,
                               str_detect(subs_numeric,"M")~1000000)) %>% 
   mutate(subs_numeric=as.numeric(str_remove(subs_numeric,"[A-Z ]"))) %>% 
-  mutate(subs_numeric=subs_numeric*mult_fact) %>% View
-  pull(subs_numeric)
+  mutate(subs_numeric=subs_numeric*mult_fact) %>% select(-mult_fact)
+```
+
+```{r, join yt data and activities}
+youtube_data_activities <- 
+  left_join(youtube_data,yt_activities_data,by="yt_video_id")
+```
+
+```{r export yt csvs}
+write_csv(youtube_data,here("proc_data","youtube_data_proc.csv"))
+write_csv(youtube_data_activities,here("proc_data","youtube_data_activities_proc.csv"))
 ```
 
