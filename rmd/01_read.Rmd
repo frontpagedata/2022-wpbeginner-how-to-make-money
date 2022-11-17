@@ -36,8 +36,8 @@ youtube_urls_meta <- airtable('Youtube URLs meta', 'appdLcbl8vtItAvjd')
 youtube_urls_meta <- read_airtable(youtube_urls_meta) %>% as_tibble() %>%  clean_names() %>% 
   filter(!if_all(c(video_url,description),is.na))
 
-tiktok_uRLs <- airtable('TikTok URLS', 'appdLcbl8vtItAvjd')
-tiktok_uRLs <- read_airtable(tiktok_uRLs) %>% as_tibble() %>%  clean_names()
+tiktok_urls <- airtable('TikTok URLS', 'appdLcbl8vtItAvjd')
+tiktok_urls <- read_airtable(tiktok_urls) %>% as_tibble() %>%  clean_names()
   
 video_stats <- airtable('Video Stats', 'appdLcbl8vtItAvjd')
 video_stats <- read_airtable(video_stats) %>% as_tibble() %>%  clean_names()
@@ -56,12 +56,12 @@ tt_video_stats <- video_stats %>%  filter(str_detect(video_url,"tiktok.com"))
 
 ```{r, split activities data by source}
 yt_activities_data <- activities_data %>% filter(str_detect(video_url,"youtube.com"))
-tt_activities_data <- video_stats %>%  filter(str_detect(video_url,"tiktok.com"))
+tt_activities_data <- activities_data %>%  filter(str_detect(video_url,"tiktok.com"))
 ```
 
 
 
-```{r, check urls}
+```{r, check youtube urls}
 # parse urls for yt video ID without the timestamps and for 'shorts'
 youtube_urls <-  youtube_urls %>% mutate(yt_video_id=param_get(video_url)$v) %>% 
   mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id))
@@ -70,10 +70,21 @@ yt_video_stats <- yt_video_stats %>% mutate(yt_video_id=param_get(video_url)$v) 
 yt_activities_data <- yt_activities_data %>% mutate(yt_video_id=param_get(video_url)$v) %>% mutate(yt_video_id=if_else(str_detect(video_url,"/shorts/"),str_extract(video_url,"[^/]+$"),yt_video_id)) 
 ```
 
+```{r, check tiktok urls}
+
+tt_video_stats <- tt_video_stats %>% mutate(tt_video_id=str_extract(video_url,"[^/]+$")) %>% 
+  mutate(tt_video_id=str_remove(tt_video_id,"\\?.+"))
+tt_activities_data <- tt_activities_data %>%  mutate(tt_video_id=str_extract(video_url,"[^/]+$")) %>% 
+    mutate(tt_video_id=str_remove(tt_video_id,"\\?.+"))
+
+```
+
 
 ```{r remove columns with all duplicates}
 youtube_urls <- youtube_urls %>% select(where(~ n_distinct(.) > 1)) # drops the 'annotated' var
 youtube_urls_meta <- youtube_urls_meta %>% select(where(~ n_distinct(.) > 1)) # dropped family_safe, live, error
+
+
 ```
 
 ```{r, drop variables repeated across related datasets}
