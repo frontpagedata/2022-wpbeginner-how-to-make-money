@@ -1,6 +1,6 @@
 ---
-title: "[Add study name]"
-author: ""
+title: "WP beginner - How to make money"
+author: "LDVA"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -10,11 +10,12 @@ output:
     toc: true
     toc_depth: 3
     toc_float: true
+    embed-resources: true
 editor_options: 
   chunk_output_type: console
 ---
 
-
+```{=html}
 <style>
 .list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus {
   background-color: #00d188;
@@ -45,34 +46,45 @@ h3 {
   font-size: 18px;
 }
 </style>
-
-
+```
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.showtext = TRUE, dpi = 700)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, dpi = 700) #, fig.showtext = TRUE, )
 
 knitr::knit_hooks$set(inline = function(x) {
   prettyNum(x, big.mark = ",", small.mark = ",", scientific = F)
 })
 
 Sys.setlocale("LC_TIME", "C")
-extrafont::loadfonts(device = "win")
+extrafont::loadfonts()
 ```
-
-
 
 ```{r prep}
 ## packages: remove or add your necessary packages
 
-required_packages <- c("tidyverse", "readxl", "ggthemes", "hrbrthemes", "extrafont", "plotly", "scales", "stringr", "gganimate", "here", "tidytext", "sentimentr", "scales", "DT", "here", "sm", "mblm", "glue", "fs", "knitr", "rmdformats", "janitor", "urltools", "colorspace", "pdftools", "showtext")
+required_packages <- c("tidyverse", "readxl", "ggthemes", "hrbrthemes", "extrafont", "plotly", "scales", "stringr", "gganimate", "here", "tidytext", "sentimentr", "scales", "DT", "here", "sm", "mblm", "glue", "fs", "knitr", "rmdformats", "janitor", "urltools", "colorspace", "pdftools")
 
-for(i in required_packages) { 
-if(!require(i, character.only = T)) {
+library(ggplot2)    # CRAN v3.3.6
+library(colorspace) # CRAN v2.0-3
+library(here)       # CRAN v1.0.1
+library(dplyr)      # CRAN v1.0.10
+library(janitor)    # CRAN v2.1.0
+library(gt)         # CRAN v0.5.0
+library(tidyr)      # CRAN v1.2.1
+library(readr)      # CRAN v2.1.3
+library(stringr)    # CRAN v1.4.1
+library(tidytext)
+library(ggalt)
+library(forcats)
+library(lubridate)
 
-  #  if package is not existing, install then load the package
-install.packages(i, dependencies = T)
-require(i, character.only = T)
-}
-}
+# for(i in required_packages) { 
+# if(!require(i, character.only = T)) {
+# 
+# #  if package is not existing, install then load the package
+# install.packages(i, dependencies = T)
+# require(i, character.only = T)
+# }
+# }
 
 
 ## save plots?
@@ -205,26 +217,463 @@ colfunc <- colorRampPalette(c(bl_col, "#bce2d5"))
 pos_cols <- colfunc(10)
 ```
 
-# load data
+## Load data
 
+```{r}
+youtube_data <- read_csv(here("proc_data","youtube_data_proc.csv"))
+youtube_data_activities <- read_csv(here("proc_data","youtube_data_activities_proc.csv"))
+tiktok_data <-  read_csv(here("proc_data","tiktok_data_proc.csv"))
+tiktok_data_activities <-  read_csv(here("proc_data","tiktok_data_activities_proc.csv"))
+```
+
+### Calculate general stats
+```{r general stats}
+yt_vids <- youtube_data %>% distinct(yt_video_id) %>% nrow()
+tt_vids <- tiktok_data %>% distinct(tt_video_id) %>% nrow()
+```
+
+```{r}
+youtube_data_activities %>% group_by(yt_video_id) %>% summarise(idn=max(idea)) %>% 
+   pull(idn) %>% {length(which(.>1))}-> mult_ideas_yt
+tiktok_data_activities %>% group_by(tt_video_id) %>% summarise(idn=max(idea)) %>% 
+   pull(idn) %>% {length(which(.>1))} -> mult_ideas_tt
+
+meanytlength <- youtube_data$video_length %>% summary %>% {./60}
+meanttlength <- tiktok_data$video_meta_duration %>% summary 
+
+
+```
+
+## General stats
+
+**YouTube**: `r yt_vids` videos (unique video url identifiers, includes YT shorts)  
+**TikTok**: `r yt_vids` videos  
+
+YouTube videos are longer (`r meanytlength["Mean"]` minutes on average for the sampled videos), so approximately one third of the videos examined (`r mult_ideas_yt`/`r yt_vids`) included \>1 money-making idea. TikTok videos have a shorter maximum length (3 to 10 minutes; `r meanttlength["Mean"]` seconds on average for the sampled videos) so videos on this platform tend to feature a single idea. Only `r mult_ideas_tt` of the `r tt_vids` TikTok videos examined provided more than one money-making idea.
+
+### Publication dates
+
+```{r parse times}
+youtube_data <- youtube_data %>% mutate(month=month(ymd(youtube_data$publish_date)),
+                        pyear=year(ymd(youtube_data$publish_date))) %>% 
+  mutate(pub_date=ymd(publish_date))
+
+
+tiktok_data <- tiktok_data %>% mutate(month=month(ymd_hms(tiktok_data$create_time_iso)),                                pyear=year(ymd_hms(tiktok_data$create_time_iso))) %>%
+  mutate(pub_date=date(ymd_hms(create_time_iso))) 
+```
+
+3/4 of the YouTube videos examined were published in 2022, and across all the videos sampled (published since 2018), most are from the summer/fall season (Northern Hemisphere).
+
+TikTok videos in the sample were published between 2019-2022, with more videos uploaded with each passing year. The month with most uploads is July.
+
+```{r}
+tiktok_data %>% tabyl(pyear) %>% round(2)
+```
+
+Publication month also varied between platforms.
+
+```{r}
+youtube_data %>% count(month) %>% 
+  ggplot()+
+  geom_bar(aes(x=month,y=n),stat = "identity")+
+  scale_x_discrete(limits=month.abb) +labs(subtitle = "YouTube data")
+
+ 
+tiktok_data %>% count(month) %>% 
+  ggplot()+
+  geom_bar(aes(x=month,y=n),stat = "identity")+
+  scale_x_discrete(limits=month.abb) +labs(subtitle = "TikTok data")
+```
+
+
+Considering publication dates, videos published earlier do not tend to accumulate more views and comments over time. Engagement is also mostly unrelated to subscriber/follower counts and thus possibly related to content.
+
+```{r}
+ttdatevc <- tiktok_data %>% select(source,pub_date,
+                       comments=comment_count,
+                       views=play_count,
+                       followers=author_meta_fans)
+ytdatevc <- youtube_data %>% select(source,pub_date,
+                       comments=comments,
+                       views=view_count,
+                       followers=subs_numeric)
+dates_views_comments <- bind_rows(ttdatevc,ytdatevc)
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=pub_date,y=views,color=source))+
+  labs(x="Publication date")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=pub_date,y=comments,color=source))+
+    labs(x="Publication date")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=views,y=comments,color=source))
+
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=followers,y=comments,color=source))
+
+dates_views_comments %>% filter(followers!=44100000) %>% 
+ggplot()+
+  geom_point(aes(x=followers,y=comments,color=source))+
+  labs(subtitle = "removed outlier")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=followers,y=views,color=source))
+
+dates_views_comments %>% filter(followers!=44100000) %>% 
+ggplot()+
+  geom_point(aes(x=followers,y=views,color=source))+
+  labs(subtitle = "removed outlier")
+
+```
+
+
+### Presenter demographics
+```{r}
+yt_presenter_demog_gend <- youtube_data %>% tabyl(presenter_gender) %>% 
+  mutate(valid_percent=round(valid_percent,2))
+yt_malepct <- yt_presenter_demog_gend$valid_percent[2] 
+tt_presenter_demog_gend <- tiktok_data %>% tabyl(presenter_gender) %>% 
+  mutate(valid_percent=round(valid_percent,2))
+tt_malepct <- tt_presenter_demog_gend$valid_percent[2] 
+yt_ages <- youtube_data %>% tabyl(presenter_age) %>% na.omit() %>% select(-percent) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent)
+tt_ages <- tiktok_data %>% tabyl(presenter_age) %>% na.omit() %>% select(-percent) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent)
+```
+
+Male presenters were represented more on both platforms (YouTube: `r yt_malepct`% and TikTok `r tt_malepct`%), and the 20-30 y.o. age category had the highest proportion with ~40%.
+
+```{r}
+gt(yt_ages) %>% tab_header("YouTube")
+gt(tt_ages) %>% tab_header("TikTok")
+```
+
+### Categories
+
+YouTube videos, as categorized by their authors, varied in assignment despite the similar overarching topic.
+
+The most common category was **Education**, followed by **How-to % Stlye**, and then all the others.
+
+```{r}
+youtube_data %>% tabyl(category) %>% arrange(-n) %>% 
+  mutate(across(where(is.numeric),round,2)) %>% gt() %>% tab_header(title = "YouTube data")
+```
+
+
+## Earnings data
+
+```{r earnings data} 
+
+ytearn <- 
+youtube_data_activities %>% 
+  group_by(yt_video_id,idea,earnings_timeframe) %>% 
+  summarise(earn=mean(earnings,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  filter(earnings_timeframe!="No timeframe provided")
+ttearn <- 
+  tiktok_data_activities %>% 
+  group_by(tt_video_id,idea,earnings_timeframe) %>% 
+  summarise(earn=mean(earnings,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  filter(earnings_timeframe!="No timeframe provided")
+
+# earnings time frames
+earn_tf <- bind_rows(ytearn,ttearn) %>% count(earnings_timeframe) %>% arrange(-n)
+
+earnings_by_tf <- 
+bind_rows(ytearn,ttearn) %>% group_by(earnings_timeframe) %>% 
+  summarize(median_earn=median(earn),
+            min_earn=min(earn),max_earn=max(earn),
+            sd_earn=sd(earn,na.rm = TRUE)) %>% arrange(-median_earn)
+```
+
+
+- The most common time frame for earnings was for daily income, followed by months and hours.
+
+
+
+```{r earnings tables}
+gt(earn_tf)
+```
+
+- Longer time frames report higher median earnings.
+
+```{r}
+gt(earnings_by_tf)
+```
+
+### Standardized earnings
+
+
+```{r}
+temporal_earn <- c("Days","Hours","Minutes","Months","Weeks","Years")
+
+yt_tempearn <- ytearn %>% filter(earnings_timeframe %in% temporal_earn)
+tt_tempearn <- ttearn %>% filter(earnings_timeframe %in% temporal_earn)
+
+yt_hourly_earn <- 
+yt_tempearn %>% mutate(hourly_earn=case_when(
+  earnings_timeframe=="Hours"~earn,
+  earnings_timeframe=="Minutes"~earn/60,
+  earnings_timeframe=="Days"~earn/8,
+  earnings_timeframe=="Weeks"~earn/40,
+  earnings_timeframe=="Months"~earn/200,
+  earnings_timeframe=="Years"~earn/2400
+)) %>% mutate(source="YouTube")
+
+tt_hourly_earn <- 
+  tt_tempearn %>% mutate(hourly_earn=case_when(
+    earnings_timeframe=="Hours"~earn,
+    earnings_timeframe=="Minutes"~earn/60,
+    earnings_timeframe=="Days"~earn/8,
+    earnings_timeframe=="Weeks"~earn/40,
+    earnings_timeframe=="Months"~earn/200,
+    earnings_timeframe=="Years"~earn/2400
+  )) %>% mutate(source="TikTok")
+
+all_earn <- bind_rows(yt_hourly_earn,tt_hourly_earn) 
+hourly_med <- median(all_earn$hourly_earn)
+
+
+bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
+  ggplot()+
+  geom_histogram(aes(hourly_earn,fill=source),color="black",alpha=0.5)
+```
+
+For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
+
+Across all videos, earnings are right-skewed. 90% of videos report hourly earnings > `r quantile(all_earn$hourly_earn,0.9)`.
+
+This distribution is also evident within earnings timeframes.
+```{r}
+bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
+  ggplot()+
+  geom_histogram(aes(earn))+
+  facet_wrap(~earnings_timeframe,scales = 'free')
+```
+
+### Earnings by category (YouTube)
+
+The more common categories (Education, Howto & Style) did not report the higher mean or median standardized earnings. Instead, the People and Blogs category and Entertainment had the top two positions.
+
+```{r prep yt data}
+yt_hourlycorrs <- left_join(yt_hourly_earn,youtube_data_activities)
+
+yt_hourlycorrs_chp <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+```
+
+
+```{r}
+yt_hourlycorrs_chp %>% 
+  group_by(category) %>% summarise(mean_earn=mean(hourly_earn),
+                                   med_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn) %>% gt()
+
+yt_hourlycorrs_chp %>% 
+  ggplot(aes(x=category,y=hourly_earn,color=category))+
+  geom_jitter() + scale_color_discrete(guide="none")
+```
+
+
+## Business types and activities
+
+### YouTube
+
+For all YouTube videos, the predominant Business Type for the money-making ideas was **Publication, Media, and Blogs**, followed by the Service Business. Other business types were less common.
+
+```{r}
+# without earnings
+yt_acts_chp <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+yt_bus1 <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+bus1ct <- yt_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1) %>% 
+  tabyl(business_type_level_1) %>% arrange(-n)
+
+bus1ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% 
+  gt() %>% tab_header("YouTube",subtitle = "Business Types, all videos") 
+
+```
+
+\
+
+For videos and ideas with reported earnings, the business activity with the highest earnings (standardized) was **Publication, Media, & Blog**, followed by investing.
+
+```{r yt_business types w earnings}
+# with earninings
+
+yt_hourlycorrs_bus1 <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_1) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("YouTube",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+\
+However, there is considerable variation in earnings across the different business types
+
+```{r}
+yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% 
+  ggplot()+
+  geom_jitter(aes(x=str_wrap(business_type_level_1,12),
+                  y=hourly_earn,color=business_type_level_1))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")
+
+```
+
+### TikTok
+
+For TikTok videos, the predominant Business Type for the money-making ideas was **Service Business** with almost 50% of videos, followed by the **Ecommerce & Consumer** ventures. Other business types were less common.
+```{r}
+
+# tt without earnings
+tt_acts_chp <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+tt_bus1 <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+tt_bus1ct <- tt_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1)  %>% 
+  tabyl(business_type_level_1) %>% arrange(-n)
+
+
+tt_bus1ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% 
+  gt() %>% tab_header("TikTok",subtitle = "Business Types, all videos") 
+
+```
+
+  
+  
+For videos and ideas with reported earnings, the business activity with the highest earnings (standardized) was **Investing**, followed by **Ecommerce & Consumer**
+
+```{r}
+# tt with earninings
+tt_hourlycorrs <- left_join(tt_hourly_earn,tiktok_data_activities)
+
+tt_hourlycorrs_chp <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+tt_hourlycorrs_bus1 <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_1) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt()
+
+```
+  
+  
+However, with some exceptions, earnings do not vary considerably across the different business types
+
+```{r}
+tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% 
+  ggplot()+
+  geom_jitter(aes(x=str_wrap(business_type_level_1,12),
+                  y=hourly_earn,color=business_type_level_1))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)",subtitle = "TikTok")
+```
 
 
 ```{r}
 
 # 1 saving plots in pdf with example
 
-ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color= drv)) + 
-     geom_smooth(mapping = aes(linetype = drv), method = 'loess') +
-     geom_point()
-
-if(save == T){ 
-  ggsave(here::here("plots", "name_plot.pdf"), name_plot, 
-         width = 12.5, height = 8, device = cairo_pdf)
-}
+# ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color= drv)) + 
+#      geom_smooth(mapping = aes(linetype = drv), method = 'loess') +
+#      geom_point()
+# 
+# if(save == T){ 
+#   ggsave(here::here("plots", "name_plot.pdf"), 
+#          width = 12.5, height = 8, device = cairo_pdf)
+# }
 
 # 2 pdfs will then be converted into the pngs using the 04_convert_pdfs_to_pngs.rmd file. 
 ```
 
+View counts, comments, followers, and standardized earnings are not tightly associated.
 
+```{r}
+
+yt_hourly_renamed <-  yt_hourlycorrs_chp %>%  
+  select(earn=hourly_earn,views=view_count,source,comments,followers=subs_numeric)
+  
+tt_hourly_renamed <-  tt_hourlycorrs_chp %>%  
+  select(earn=hourly_earn,views=play_count,source,comments=comment_count,
+           followers=author_meta_fans)
+
+hourlyboth <- bind_rows(yt_hourly_renamed,tt_hourly_renamed)
+
+ggplot(hourlyboth)+aes(x=views,y=earn,color=source)+geom_point()
+ggplot(hourlyboth)+aes(x=comments,y=earn,color=source)+geom_point()
+ggplot(hourlyboth)+aes(x=followers,y=earn,color=source)+geom_point()
+```
+
+
+
+## Video titles
+
+In general, the video titles vary considerably across platforms in terms of length, content and style. 
+
+
+```{r}
+tiktok_data <-  tiktok_data %>% mutate(title_noHash=str_extract(text,"^[^#]*")) 
+yt_tlength <- round(mean(str_length(youtube_data$title)),0)
+tt_tlength <-round(mean(str_length(tiktok_data$text)))
+tt_tlength_nh <-round(mean(str_length(tiktok_data$title_noHash)))
+```
+
+Without various trailing hashtags, YouTube video titles are on average, twice as long as TikTok titles (`r yt_tlength` vs. `r tt_tlength_nh` characters). Overall, roughly a third of the length of TikTok titles comprises various hashtags.
+
+
+The words and bigrams (consecutive sequences of two words) that appear most frequently in the video's titles vary significantly between platforms.
+
+```{r}
+# tokenize 
+stopwords <- c("for","in","a","the","to","with","from","by")
+title_words_yt <- youtube_data %>% unnest_tokens(title_wrd,title,token = "words") %>% 
+  filter(!title_wrd %in% stopwords)
+title_bigrams_yt <- youtube_data %>% unnest_tokens(title_bg,title,token = "ngrams",n=2) 
+title_words_tt <- tiktok_data %>% unnest_tokens(title_wrd,text,token = "tweets") %>% 
+  filter(!title_wrd %in% stopwords)
+title_bigrams_tt <- title_words_tt %>% mutate(nextwrdbg=lead(title_wrd)) %>% 
+  unite(title_bg, title_wrd, nextwrdbg, sep = ' ')
+
+
+wordsyt <- title_words_yt %>% count(title_wrd) %>% slice_max(n,n=15) %>% mutate(source="YouTube")
+wordstt <- title_words_tt %>% count(title_wrd) %>% slice_max(n,n=15) %>% mutate(source="TikTok")
+bg_yt <- title_bigrams_yt %>% count(title_bg) %>% slice_max(n,n=15) %>% mutate(source="YouTube")
+bg_tt <- title_bigrams_tt %>% count(title_bg) %>% slice_max(n,n=15) %>% mutate(source="TikTok")
+top15wrds <- bind_rows(wordsyt,wordstt)
+top15bg <- bind_rows(bg_yt,bg_tt)
+
+ggplot(top15wrds)+
+  geom_lollipop(aes(x=fct_reorder(title_wrd,n),y=n))+
+  facet_wrap(~source)+labs(x="word or hashtag",y='occurrences')+
+  coord_flip()
+
+ggplot(top15bg)+
+  geom_lollipop(aes(x=fct_reorder(title_bg,n),y=n))+
+  facet_wrap(~source)+labs(x="bigram",y='occurrences')+
+  coord_flip()
+```
+  
+    
+Considering the top 15 words or bigrams, there is little overlap between platforms.
 
 
