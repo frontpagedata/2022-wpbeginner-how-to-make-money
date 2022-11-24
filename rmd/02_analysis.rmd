@@ -76,6 +76,7 @@ library(tidytext)
 library(ggalt)
 library(forcats)
 library(lubridate)
+library(ggforce)
 
 # for(i in required_packages) { 
 # if(!require(i, character.only = T)) {
@@ -473,13 +474,13 @@ yt_hourlycorrs_chp %>%
 
 yt_hourlycorrs_chp %>% 
   ggplot(aes(x=category,y=hourly_earn,color=category))+
-  geom_jitter() + scale_color_discrete(guide="none")
+  geom_sina() + scale_color_discrete(guide="none")
 ```
 
 
 ## Business types and activities
 
-### YouTube
+### YouTube - Level 1
 
 For all YouTube videos, the predominant Business Type for the money-making ideas was **Publication, Media, and Blogs**, followed by the Service Business. Other business types were less common.
 
@@ -508,7 +509,7 @@ For videos and ideas with reported earnings, the business activity with the high
 # with earninings
 
 yt_hourlycorrs_bus1 <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
-  unchop(business_type_level_1) %>%  ungroup()
+unchop(business_type_level_1) %>%  ungroup()
 
 yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
   distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup() %>% 
@@ -526,13 +527,71 @@ However, there is considerable variation in earnings across the different busine
 yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
   distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% 
   ggplot()+
-  geom_jitter(aes(x=str_wrap(business_type_level_1,12),
+  geom_sina(aes(x=str_wrap(business_type_level_1,12),
                   y=hourly_earn,color=business_type_level_1))+
   scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")
 
 ```
 
-### TikTok
+### YouTube - Level 2
+```{r eda yt2}
+yt_bus2 <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  unchop(business_type_level_2) %>%  ungroup()
+n_bus2 <- youtube_data_activities %>% distinct(business_type_level_2) %>% nrow()
+maxnbus2 <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
+    distinct(yt_video_id,idea,business_type_level_2) %>% ungroup() %>% group_by(yt_video_id,idea) %>% summarise(nbus2=n()) %>% arrange(-nbus2) %>% pull(nbus2) %>% max()
+```
+
+
+The second-level classification of Business Activities for making money includes many more categories (`r n_bus2`). Many combinations of Business Types were possible for each video/idea, but none included more than `r maxnbus2`.
+
+At this level no particular business type predominated, none represented >20% of suggested activities. The most frequent business type was **Publication, Media & Blog - Affiliate Marketing**, followed by **Service Business - Microwork/tasks (e.g. Taking surveys, searching for data, tagging content and identifying images)**. Other types were much less common.
+
+```{r level 2 no earnings}
+
+
+
+
+bus2ct <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2) %>% 
+  tabyl(business_type_level_2) %>% arrange(-n)
+
+bus2ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% filter(n>1) %>% 
+  gt() %>% tab_header("YouTube",subtitle = "Business Types (LEVEL 2), all videos") %>% tab_footnote(footnote = "n=1 not shown",
+                           locations = cells_column_labels(
+                             columns = n
+                           )) 
+```
+
+The Business type with the highest mean standardized earnings was **Publication, Media & Blog - Newsletter/ Articles**, followed by **Ecommerce & Consumer - Dropshipping** and other types in the Publication/Media/Blogging fields.
+
+```{r level 2 earnings}
+yt_hourlycorrs_bus2 <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+unchop(business_type_level_2) %>%  ungroup()
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_2) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("YouTube, Business Type Level 2",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+The five business types at this level with n>6 show a wide range of earnings.
+
+```{r}
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% add_count(business_type_level_2) %>% filter(n>6) %>% 
+  ggplot()+
+  geom_sina(aes(x=str_wrap(business_type_level_2,33),
+                  y=hourly_earn,color=business_type_level_2))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
+  coord_flip()+labs(x="Business Type Level 2")
+
+```
+
+
+### TikTok - Level 1
 
 For TikTok videos, the predominant Business Type for the money-making ideas was **Service Business** with almost 50% of videos, followed by the **Ecommerce & Consumer** ventures. Other business types were less common.
 ```{r}
@@ -624,6 +683,215 @@ ggplot(hourlyboth)+aes(x=comments,y=earn,color=source)+geom_point()
 ggplot(hourlyboth)+aes(x=followers,y=earn,color=source)+geom_point()
 ```
 
+### TikTok - Level 2
+
+```{r tt l2 eda}
+n_bus2tt <- tiktok_data_activities %>% distinct(business_type_level_2) %>% nrow()
+
+tt_bus2 <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_2) %>%  ungroup()
+maxnbus2tt <- tt_bus2 %>% group_by(tt_video_id,idea) %>% 
+    distinct(tt_video_id,idea,business_type_level_2) %>% ungroup() %>% group_by(tt_video_id,idea) %>% summarise(nbus2=n()) %>% arrange(-nbus2) %>% pull(nbus2) %>% max()
+```
+
+TikTok videos mentioned fewer (`r n_bus2tt`) Business Activities in this level than Youtube videos. Many combinations of Business Types were possible for each video/idea, but none included more than `r maxnbus2tt`.
+
+No particular business type predominated, none represented >20% of suggested activities. The most frequent business type was **Service Business - Microwork/tasks (e.g. Taking surveys, searching for data, tagging content and identifying images)**, followed by **Ecommerce & Consumer - Online shop on marketplaces (e.g. Ebay, Etsy)**. Other types were much less common.
+
+
+```{r tt level 2 all}
+
+
+bus2ctt <- tt_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2) %>% 
+  tabyl(business_type_level_2) %>% arrange(-n)
+
+bus2ctt %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% filter(n>1) %>% 
+  gt() %>% tab_header("TikTok",subtitle = "Business Types (LEVEL 2), all videos") %>% tab_footnote(footnote = "n=1 not shown",
+                           locations = cells_column_labels(
+                             columns = n
+                           )) 
+```
+
+
+The Business type with the highest mean standardized earnings was **Publication, Media & Blog - Write a blog** (although this result is driven by a single video stating $300000 in monthly earnings through this method). After that **Service Business - Furniture Flipping** and  **Investing - Stocks** have similar earnings, followed by various others.
+
+```{r level 2 earnings tt} 
+tt_hourlycorrs_bus2 <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+unchop(business_type_level_2) %>%  ungroup()
+
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_2) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("TikTok, Business Type Level 2",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+
+The six business types at this level with n>5 also show a wide range of earnings.
+
+```{r}
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% add_count(business_type_level_2) %>% filter(n>5) %>% 
+  ggplot()+
+  geom_sina(aes(x=str_wrap(business_type_level_2,33),
+                  y=hourly_earn,color=business_type_level_2))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
+  coord_flip()+labs(x="Business Type Level 2")
+
+```
+
+
+## Skills
+
+Different money-making ideas on both platforms varied in the number of skills needed to generate earnings. For the most part, each idea needed only one or two different skills, and this was more evident on TikTok (much shorter videos with generally only one money-making idea).
+
+```{r}
+skills_per_idea_yt <- 
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+  group_by(yt_video_id,idea) %>%  distinct() %>% 
+summarise(n_skills=n()) %>% ungroup() %>% mutate(source="YouTube") %>% 
+    select(n_skills,source)
+
+skills_per_idea_tt <- 
+tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+  group_by(tt_video_id,idea) %>%  distinct() %>% 
+summarise(n_skills=n()) %>% ungroup()%>% mutate(source="TikTok") %>% 
+  select(n_skills,source)
+
+bind_rows(skills_per_idea_tt,skills_per_idea_yt) %>% 
+ggplot()+
+  geom_histogram(aes(x=n_skills,fill=source))
+```
+
+The makeup of required skills also varied across platforms.  
+
+On YouTube, the most mentioned skill was Marketing followed by Image or Video Editing.
+```{r}
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% distinct() %>% tabyl(skills_required) %>% arrange(-n) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% na.omit %>% gt() %>% tab_header(title = "YouTube")
+```
+
+When an idea or video required two or more skills, the most common combinations were Speaking + Video Editing, Investing + Marketing, Speaking + Writing, and Image + Video Editing.
+
+```{r}
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+  group_by(yt_video_id,idea) %>% 
+  arrange(yt_video_id, skills_required) %>% 
+  summarize(combination = paste0(skills_required, collapse = " - "), .groups = "drop") %>% 
+  count(combination) %>% 
+  filter(str_detect(combination," - ")) %>%  arrange(-n) %>% slice(1:10) %>% 
+  gt() %>% tab_header("YouTube Data", subtitle="Combinations of >2 skills, Top 10 most common combinations shown")
+```
+
+  
+    
+      
+TikTok videos favored Investing, followed by Marketing and Writing.
+
+```{r}
+tiktok_data_activities %>% group_by(tt_video_id,idea) %>% tabyl(skills_required) %>% arrange(-n) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% na.omit %>% gt() %>% tab_header(title = "TikTok")
+```
+
+Despite the fewer videos that required >1 skill, there were some frequently mentioned skill combinations such as Investing + Marketing, followed by Marketing+Programming+Video Editing+Web Development+Writing.
+
+```{r}
+tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+  group_by(tt_video_id,idea) %>% 
+  arrange(tt_video_id, skills_required) %>% 
+  summarize(combination = paste0(skills_required, collapse = " - "), .groups = "drop") %>% 
+  count(combination) %>% 
+  filter(str_detect(combination," - ")) %>%  arrange(-n) %>% slice(1:10) %>% 
+  gt() %>% tab_header("TikTok Data", subtitle="Combinations of >2 skills, Top 10 most common combinations shown")
+
+```
+
+## Skills and earnings
+
+Across both platforms, the Skill with the highest mean standardized earnings (hourly) was Investing, followed by Marketing, Video Editing, and Writing.
+
+```{r}
+ttskillearn <- 
+tt_hourlycorrs %>% select(tt_video_id,idea,hourly_earn,skills_required) %>% group_by(tt_video_id,idea) %>% distinct() %>% 
+  group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn) 
+
+ytskillearn <- 
+yt_hourlycorrs %>% select(yt_video_id,idea,hourly_earn,skills_required) %>% group_by(yt_video_id,idea) %>% distinct() %>% 
+  group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn)
+
+ytskillearns <- 
+yt_hourlycorrs %>% select(yt_video_id,idea,hourly_earn,skills_required) %>% group_by(yt_video_id,idea) %>% distinct() %>% 
+  ungroup %>%  mutate(source="YouTube")
+
+ttskillearns <-  
+tt_hourlycorrs %>% select(tt_video_id,idea,hourly_earn,skills_required) %>% group_by(tt_video_id,idea) %>% distinct() %>% 
+ungroup %>% mutate(source="TikTok")
+
+bothearn <- bind_rows(ytskillearns,ttskillearns) %>% group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn)
+
+gt(bothearn) %>% tab_header(title='all platforms',subtitle = "earnings by skill")
+
+```
+
+By platform, differences in reported earnings appear. 
+On YouTube, Marketing and Investing report the highest mean earnings.
+On TikTok, Video Editing and Investing report the highest earnings.
+
+```{r}
+gt(ytskillearn)%>% tab_header(title='YouTube',subtitle = "earnings by skill")
+gt(ttskillearn) %>% tab_header(title='TikTok',subtitle = "earnings by skill")
+```
+
+Additionally, TikTok videos report significantly higher earnings for the same skills compared with YouTube videos.
+```{r}
+ytskearnsummary <- ytskillearn %>% mutate(source="YouTube")
+ttskearnsummary <- ttskillearn %>% mutate(source="TikTok")
+bind_rows(ytskearnsummary,ttskearnsummary) %>% 
+  ggplot()+
+  geom_bar(aes(x=fct_reorder(skills_required,mean_earn),y=mean_earn,fill=source),stat="identity",position = "dodge")+coord_flip()+labs(x='skill')
+```
+
+The variation and spread of earnings by skill is consistent across platforms.
+
+```{r}
+
+bind_rows(ytskillearns,ttskillearns) %>% 
+  ggplot(aes(x=fct_reorder(skills_required,hourly_earn),y=hourly_earn,color=source))+
+  geom_sina()+labs(x='skill')+
+  coord_flip()
+
+
+```
+
+More required skills did not relate with greater earnings.
+
+```{r}
+# skills_per_idea_ytid <- 
+# youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+#   group_by(yt_video_id,idea) %>%  distinct() %>% 
+# summarise(n_skills=n()) %>% ungroup() %>% mutate(source="YouTube")  
+# 
+# skills_per_idea_ttid <- 
+# tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+#   group_by(tt_video_id,idea) %>%  distinct() %>% 
+# summarise(n_skills=n()) %>% ungroup()%>% mutate(source="TikTok")  
+
+skillsearntt <- left_join(skills_per_idea_tt,tt_hourly_earn)
+skillsearnyt <- left_join(skills_per_idea_yt,yt_hourly_earn)
+bind_rows(skillsearntt,skillsearnyt) %>% 
+  ggplot(aes(x=factor(n_skills),hourly_earn))+geom_boxplot()+
+  labs(x="number of skills required per money-making idea",y="standardized earnings")
+```
 
 
 ## Video titles
