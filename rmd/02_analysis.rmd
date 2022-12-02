@@ -433,6 +433,14 @@ tt_hourly_earn <-
   )) %>% mutate(source="TikTok")
 
 all_earn <- bind_rows(yt_hourly_earn,tt_hourly_earn) 
+
+tt_h_earnsum <- 
+tt_hourly_earn %>% summarize(mean_earn=mean(hourly_earn),
+                             median_earn=median(hourly_earn))
+yt_h_earnsum <- 
+yt_hourly_earn %>% summarize(mean_earn=mean(hourly_earn),
+                             median_earn=median(hourly_earn))
+
 hourly_med <- median(all_earn$hourly_earn)
 
 
@@ -443,7 +451,14 @@ bind_rows(yt_hourly_earn,tt_hourly_earn) %>%
 
 For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
 
-Across all videos, earnings are right-skewed. 90% of videos report hourly earnings > `r quantile(all_earn$hourly_earn,0.9)`.
+Across all videos, earnings are right-skewed. 90% of videos report hourly earnings < `r quantile(all_earn$hourly_earn,0.9)`.
+
+std hourly earnings varied by platform
+```{r}
+yt_hourly_earn %>% gt()
+tt_hourly_earn %>% gt()
+```
+
 
 This distribution is also evident within earnings timeframes.
 ```{r}
