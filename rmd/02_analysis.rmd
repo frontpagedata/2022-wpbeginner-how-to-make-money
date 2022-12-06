@@ -492,7 +492,6 @@ yt_hourlycorrs_chp %>%
   geom_sina() + scale_color_discrete(guide="none")
 ```
 
-
 ## Business types and activities
 
 ### YouTube - Level 1
@@ -757,6 +756,21 @@ tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>%
   coord_flip()+labs(x="Business Type Level 2")
 
 ```
+
+## Top earners
+
+On YouTube, these three videos (from three different creators) report the highest earnings.
+```{r}
+yt_hourlycorrs_chp %>% slice_max(hourly_earn,n = 3) %>% select(video_url,title,author,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+
+On TikTok, these three videos (from three different creators) report the highest earnings.
+```{r}
+tt_hourlycorrs_chp %>% slice_max(hourly_earn,n = 3) %>% select(web_video_url,text,author_meta_nick_name,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+In particular, author **"Adam Enfroy"** appears on both of these platforms reporting 100-300k USD in monthly earnings.
 
 
 ## Skills
