@@ -1,6 +1,5 @@
 ---
 title: "WP beginner - How to make money"
-output_dir: "docs"
 author: "LDVA"
 date: "Last updated on `r Sys.Date()`"
 output:
@@ -973,5 +972,4 @@ ggplot(top15bg)+
   
     
 Considering the top 15 words or bigrams, there is little overlap between platforms.
-
 
