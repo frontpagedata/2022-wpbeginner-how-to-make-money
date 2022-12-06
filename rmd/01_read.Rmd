@@ -18,7 +18,6 @@ library(stringr)   # CRAN v1.4.1
 library(readr)     # CRAN v2.1.3
 library(here)
 
-#set_airtable_api_key('keyqGzdUDWPizo9Yr', install = TRUE)
 
 
 
