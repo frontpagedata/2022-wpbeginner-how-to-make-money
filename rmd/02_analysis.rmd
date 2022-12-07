@@ -369,13 +369,15 @@ youtube_data %>% tabyl(category) %>% arrange(-n) %>%
 
 ytearn <- 
 youtube_data_activities %>% 
+  mutate(earnings_1_unit=earnings/earnings_timeframe_number) %>% 
   group_by(yt_video_id,idea,earnings_timeframe) %>% 
-  summarise(earn=mean(earnings,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  summarise(earn=mean(earnings_1_unit,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
   filter(earnings_timeframe!="No timeframe provided")
 ttearn <- 
   tiktok_data_activities %>% 
+  mutate(earnings_1_unit=earnings/earnings_timeframe_number) %>% 
   group_by(tt_video_id,idea,earnings_timeframe) %>% 
-  summarise(earn=mean(earnings,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  summarise(earn=mean(earnings_1_unit,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
   filter(earnings_timeframe!="No timeframe provided")
 
 # earnings time frames
@@ -397,10 +399,15 @@ bind_rows(ytearn,ttearn) %>% group_by(earnings_timeframe) %>%
 gt(earn_tf)
 ```
 
-- Longer time frames report higher median earnings.
+- Longer time frames report higher median earnings (per 1 unit of time, **_not standardized_**)
 
 ```{r}
-gt(earnings_by_tf)
+gt(earnings_by_tf)%>% 
+  fmt_number(
+    columns = -earnings_timeframe,  
+    decimals = 1,
+    use_seps = FALSE
+  )
 ```
 
 ### Standardized earnings
@@ -415,7 +422,7 @@ tt_tempearn <- ttearn %>% filter(earnings_timeframe %in% temporal_earn)
 yt_hourly_earn <- 
 yt_tempearn %>% mutate(hourly_earn=case_when(
   earnings_timeframe=="Hours"~earn,
-  earnings_timeframe=="Minutes"~earn/60,
+  earnings_timeframe=="Minutes"~earn*60,
   earnings_timeframe=="Days"~earn/8,
   earnings_timeframe=="Weeks"~earn/40,
   earnings_timeframe=="Months"~earn/200,
@@ -425,7 +432,7 @@ yt_tempearn %>% mutate(hourly_earn=case_when(
 tt_hourly_earn <- 
   tt_tempearn %>% mutate(hourly_earn=case_when(
     earnings_timeframe=="Hours"~earn,
-    earnings_timeframe=="Minutes"~earn/60,
+    earnings_timeframe=="Minutes"~earn*60,
     earnings_timeframe=="Days"~earn/8,
     earnings_timeframe=="Weeks"~earn/40,
     earnings_timeframe=="Months"~earn/200,
@@ -451,14 +458,25 @@ bind_rows(yt_hourly_earn,tt_hourly_earn) %>%
 
 For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
 
+Once standardized, the timeframe with the highest median earnings was minutes. For this time frame, 18 of 20 videos suggest that it is possible to make between 1 and 30 USD per minute with their ideas. This becomes up to $1800 per hour.
+
+```{r}
+all_earn %>% group_by(earnings_timeframe) %>% 
+  summarize(median_earn=median(hourly_earn),
+            min_earn=min(hourly_earn),max_earn=max(hourly_earn),
+            sd_earn=sd(hourly_earn,na.rm = TRUE)) %>% arrange(-median_earn) %>% gt() %>% 
+  fmt_number(
+    columns = -earnings_timeframe,  
+    decimals = 1,
+    use_seps = FALSE
+  )
+```
+
+
+
 Across all videos, earnings are right-skewed. 90% of videos report hourly earnings < `r quantile(all_earn$hourly_earn,0.9)`.
 
 std hourly earnings varied by platform
-```{r}
-yt_hourly_earn %>% gt()
-tt_hourly_earn %>% gt()
-```
-
 
 This distribution is also evident within earnings timeframes.
 ```{r}
@@ -771,6 +789,16 @@ tt_hourlycorrs_chp %>% slice_max(hourly_earn,n = 3) %>% select(web_video_url,tex
 ```
 
 In particular, author **"Adam Enfroy"** appears on both of these platforms reporting 100-300k USD in monthly earnings.
+
+## Bottom earners
+
+```{r}
+yt_hourlycorrs_chp %>% slice_min(hourly_earn,n = 3) %>% select(video_url,title,author,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+```{r}
+tt_hourlycorrs_chp %>% slice_min(hourly_earn,n = 3) %>% select(web_video_url,text,author_meta_nick_name,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
 
 
 ## Skills
