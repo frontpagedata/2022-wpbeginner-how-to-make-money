@@ -75,11 +75,14 @@ library(stringr)    # CRAN v1.4.1
 library(tidytext)
 library(ggalt)
 library(ggchicklet)
+library(ggridges)
+library(PrettyCols)
 library(forcats)
 library(ggfittext)
-library(patchwork)
 library(lubridate)
 library(ggforce)
+library(ggtext)
+library(patchwork)
 
 # for(i in required_packages) { 
 # if(!require(i, character.only = T)) {
@@ -114,10 +117,10 @@ theme_set(ggthemes::theme_clean(base_size = 20, base_family = "Ubuntu"))
 theme_update(plot.margin = margin(30, 30, 30, 30),
              plot.background = element_rect(color = "white",
                                             fill = "white"),
-             plot.title = element_text(size = 20,
+             plot.title = element_text(size = 25,
                                        face = "bold",
                                        lineheight = 1.05,
-                                       hjust = .5,color="#ffac36",
+                                       hjust = .5,
                                        margin = margin(10, 0, 25, 0)),
              plot.title.position = "plot",
              plot.caption = element_text(color = "grey40",
@@ -128,15 +131,13 @@ theme_update(plot.margin = margin(30, 30, 30, 30),
                                         size = .8),
              axis.line.y = element_line(color = "black",
                                         size = .8),
-             axis.title.x = element_text(size = 19,
-                                         face = "bold",
+             axis.title.x = element_text(size = 22,
                                          margin = margin(t = 20)),
-             axis.title.y = element_text(size = 19,
-                                         face = "bold",
+             axis.title.y = element_text(size = 22,
                                          margin = margin(r = 20)),
-             axis.text = element_text(size = 11,
+             axis.text = element_text(size = 19,
                                       color = "black",
-                                      face = "bold"),
+                                      ),
              axis.text.x = element_text(margin = margin(t = 10)),
              axis.text.y = element_text(margin = margin(r = 10)),
              axis.ticks = element_blank(),
@@ -146,23 +147,21 @@ theme_update(plot.margin = margin(30, 30, 30, 30),
              panel.grid.major.y = element_line(size = .6,
                                                color = "#eaeaea",
                                                linetype = "solid"),
-             panel.grid.minor.x = element_line(size = .6,
-                                               color = "#eaeaea",
-                                               linetype = "solid"),
+             panel.grid.minor.x = element_blank(),
              panel.grid.minor.y = element_blank(),
              panel.spacing.x = unit(4, "lines"),
              panel.spacing.y = unit(2, "lines"),
              legend.position = "top",
              legend.title = element_text(family = "Ubuntu",
-                                         size = 14, color="black",
+                                         size = 16, color="black",
                                          margin = margin(5, 0, 5, 0)),
              legend.text = element_text(family = "Ubuntu",
                                         color = "black",
-                                        size = 11,
-                                        margin = margin(4.5, 4.5, 4.5, 4.5)),
-             legend.background = element_rect(fill = NA,
-                                              color = NA),
-             legend.key = element_rect(color = NA, fill = NA),
+                                        size = 16,
+                                        margin = margin(4, 4, 4, 4)),
+             legend.background = element_rect(fill = "white",
+                                              color = "#eaeaea"),
+             legend.key = element_rect(color = "#eaeaea", fill = "white"),
              #legend.key.width = unit(5, "lines"),
              #legend.spacing.x = unit(.05, "pt"),
              #legend.spacing.y = unit(.55, "pt"),
@@ -199,7 +198,8 @@ theme_map <-
         plot.caption = element_text(size = 14,
                                     color = "grey33",
                                     hjust = .97,
-                                    margin = margin(-30, 0, 0, 0)))
+                                    margin = margin(-30, 0, 0, 0)),
+        panel.grid.minor = element_blank())
 
 ## numeric format for labels
 num_format <- scales::format_format(big.mark = ",", small.mark = ",", scientific = F)
@@ -212,12 +212,6 @@ bl_dark <- darken(bl_col, .3, space = "HLS")
 int_cols <- c("#bce2d5", "#79d8b6", bl_col, "#009f66", "#006c45", "#003925")
 int_perc <- c("100%", "95%", "75%", "50%", "25%", "5%")
 
-## colors for degrees (Bachelors, Massters, Doctorate in reverse order)
-cols_degree <- c("#e64500", "#FFCC00", darken(bl_col, .1))
-
-## gradient colors for position
-colfunc <- colorRampPalette(c(bl_col, "#bce2d5"))
-pos_cols <- colfunc(10)
 ```
 
 ## Load data
@@ -357,26 +351,44 @@ gt(tt_ages) %>% tab_header("TikTok")
 
 
 ```{r}
-gendplt <- 
-bind_rows(tt_presenter_demog_gend,yt_presenter_demog_gend) %>% na.omit() %>%
-  ggplot(aes(x=source,y=valid_percent,fill=presenter_gender,label=presenter_gender))+
-  geom_chicklet()+
-  labs(x="Video Source",y="presenter representation")+
-  geom_bar_text(family="Ubuntu",fullheight = T,size=20)+
-  scale_fill_manual(values=c("#003eaa","#46A5FF"),guide="none")
+  gendplt <- 
+    bind_rows(tt_presenter_demog_gend,yt_presenter_demog_gend) %>% na.omit() %>%
+    ggplot(aes(x=source,y=valid_percent,fill=presenter_gender,label=presenter_gender))+
+    geom_chicklet()+
+    labs(x="Video Source",y="Presenter representation")+
+    scale_y_continuous(labels=scales::percent_format())+
+    geom_bar_text(family="Ubuntu",fullheight = T,size=23)+
+    scale_fill_pretty_d(name = "Relax",guide="none")+
+    theme(axis.line.y = element_blank(),
+          axis.line.x = element_blank(),
+          axis.title.x = element_blank(),
+          panel.grid.major.y =  element_blank(),
+      panel.grid.major.x =  element_blank())
+  
 
+  
 ageplt <- 
-bind_rows(yt_ages,tt_ages) %>% 
-  filter(str_detect(presenter_age,"^[0-9]")) %>% 
-  ggplot(aes(x=fct_reorder(presenter_age,percent),y=n,fill=source,color=source))+
-  geom_chicklet(position = "dodge")+
-  labs(y="Number of videos",x="Presenter Age",
-       caption = "Excludes text-to-speech or voice-over presenters")+
-  scale_fill_manual(values = c("#00f2ea","#FF0000"),name="Video Source")+
-  scale_color_manual(values=c("#ff0050","#282828"),name="Video Source")+
-  coord_flip()
+    bind_rows(yt_ages,tt_ages) %>% 
+    filter(str_detect(presenter_age,"^[0-9]")) %>% 
+    ggplot(aes(x=fct_reorder(presenter_age,percent),y=n,fill=source,color=source))+
+    geom_bar(position = "dodge",stat="identity",width = 0.8)+
+  geom_bar_text(position = "dodge",family="Ubuntu")+  
+  labs(y="Number of videos",x="Presenter age",
+       subtitle="<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> & <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>",
+         caption = "Excludes text-to-speech or voice-over presenters")+
+    scale_fill_manual(values = c("#69c9d0","#FF0000"),guide="none")+
+    scale_color_manual(values=c("#ff0050","#282828"),guide="none")+
+  scale_x_discrete(expand = c(0.18,0))+  
+  scale_y_continuous(expand = c(0,0))+  
+  coord_flip()+
+  theme(plot.subtitle = element_markdown(face="bold"),
+        panel.grid.major.y =  element_blank(),
+        axis.line.y = element_blank(),
+        plot.title = element_text(color="black"),
+        panel.grid.major.x =  element_blank())
 
-ageplt+gendplt
+ageplt+gendplt+plot_annotation(title="Presenter Demographics",theme = theme(plot.title=element_text(color="black")))
+
 ```
 
 ### Categories
@@ -479,17 +491,31 @@ yt_hourly_earn %>% summarize(mean_earn=mean(hourly_earn),
 hourly_med <- median(all_earn$hourly_earn)
 
 
+
 bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
+  filter(hourly_earn<1300) %>% 
   ggplot()+
   geom_histogram(aes(hourly_earn,fill=source,color=source),
-                 alpha=0.7,linewidth=0.6,bins=25)+
-  labs(x="Hourly earnings ($)",
-       y="Number of money-making ideas",
-       title="Distribution of standardized hourly earnings")+
-  scale_fill_manual(values = c("#00f2ea","#FF0000"),name="Video Source")+
-  scale_color_manual(values=c("#ff0050","#282828"),name="Video Source")+
-  theme(plot.title = element_text(color = "#ffac36"),
-        legend.position = "bottom",text = element_text(family='Ubuntu'))
+                 linewidth=0.6,bins=25,position = "dodge")+
+  annotate(
+    geom = "curve", x = 810, y = 7, xend = 960, yend = 1, 
+    curvature = .1, arrow = arrow(length = unit(2, "mm"))
+  ) +
+  annotate(geom = "text", x = 360, y = 12,family="Ubuntu",size=5,
+           label = "Not shown:\nTwo videos suggesting $1500 and $1800 in earnings\n(one from YouTube, one from TikTok)", hjust = "left")+
+  labs(x="Hourly earnings (USD)",
+       y="Number of money-making activities",
+       title="Distribution of Hourly Earnings by Platform",
+       caption = "Videos often included >1 activites",
+       subtitle = "<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> &  <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  scale_fill_manual(values =c("#69c9d0","#FF0000"),guide="none")+
+  scale_x_continuous(labels=scales::dollar_format(),expand = c(0.01,0))+
+  scale_y_continuous(expand = c(0,0))+
+  scale_color_manual(values=c("#ff0050","#282828"),guide="none")+
+  theme(plot.title = element_text(color = "black"),
+        plot.subtitle = element_markdown(hjust = 1,face = "bold"),
+        axis.line.y = element_blank(),
+        legend.position = c(0.8,0.8),text = element_text(family='Ubuntu'))
 ```
 For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
 
@@ -616,9 +642,6 @@ The second-level classification of Business Activities for making money includes
 At this level no particular business type predominated, none represented >20% of suggested activities. The most frequent business type was **Publication, Media & Blog - Affiliate Marketing**, followed by **Service Business - Microwork/tasks (e.g. Taking surveys, searching for data, tagging content and identifying images)**. Other types were much less common.
 
 ```{r level 2 no earnings}
-
-
-
 
 bus2ct <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
   distinct(yt_video_id,idea,business_type_level_2) %>% 
@@ -816,19 +839,136 @@ tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>%
 bus1ct <- bus1ct %>% na.omit %>% mutate(source="YouTube")
 tt_bus1ct <- tt_bus1ct %>% na.omit %>% mutate(source="TikTok")
 
+xlabsdf <- bind_rows(bus1ct,tt_bus1ct) %>% distinct(business_type_level_1) %>% mutate(x=1:5,y=1)
+xlabsdf
+
 bind_rows(bus1ct,tt_bus1ct) %>% 
-ggplot()+
-  geom_bar(aes(x=fct_reorder(business_type_level_1,n),y=n,fill=source,
-               color=source),stat="identity",linewidth=0.7,
-           position = "dodge")+
-  labs(x="Business Type",
-       y="Number of money-making activities",
-       title="Popular Business Types by Platform")+
-  scale_fill_manual(values = c("#00f2ea","#FF0000"),name="Video Source")+
-  scale_color_manual(values=c("#ff0050","#282828"),name="Video Source")+
-  theme(plot.title = element_text(color = "#ffac36"),
-        legend.position = "bottom",text = element_text(family='Ubuntu'))+
+ggplot(aes(x=fct_reorder(business_type_level_1,n),y=n,fill=source,
+               color=source,group=source))+
+  geom_col(linewidth=0.7,
+           position = "dodge",width = 0.8)+
+  labs(y="Number of mentions",
+       title="Business Types Mentioned by Platform",
+       subtitle = "<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> &  <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  geom_bar_text(position = "dodge",reflow = TRUE,family="Ubuntu",size=16)+
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_manual(values = c("#69c9d0","#FF0000"),guide='none')+
+  scale_color_manual(values=c("#ff0050","#282828"),guide='none')+
+  theme(plot.title = element_text(color = "black"),
+        legend.position = "bottom",
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        plot.subtitle = element_markdown(hjust = 1,face = "bold"),
+        text = element_text(family='Ubuntu'))+
   coord_flip()
+
+
+
+
+```
+
+
+### Share of business types (Level 2) by platform
+```{r, fig.width=15}
+bus2ctp <- bus2ct %>% na.omit %>% mutate(source="YouTube")%>% 
+  separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) 
+bus2cttp<- bus2ctt %>% na.omit %>% mutate(source="TikTok")%>% 
+  separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) 
+
+bus2filttt <- 
+bus2cttp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
+
+ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
+                      fill=level1))+
+  geom_col(linewidth=0.3,
+           position = "dodge",color="black",width=0.75)+
+  scale_fill_pretty_d("Relax")+
+  labs(x="Business Type",
+       y="Number of mentions",
+       title="Business Types Mentioned - <span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span>")+
+  geom_bar_text(family="Ubuntu")+
+  coord_flip()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(plot.title = element_markdown(color="black"),
+        legend.position = c(0.85,0.26),
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
+        axis.text.x = element_text(size=16),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        text = element_text(family='Ubuntu'))
+
+
+```
+
+Level 2, tiktok
+```{r}
+bus2filttt <- 
+bus2cttp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
+
+bus2filttt
+ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
+                      fill=level1))+
+  geom_col(linewidth=0.3,
+           position = "dodge",color="black",width=0.75)+
+  scale_fill_pretty_d("Relax")+
+  labs(x="Business type",
+       y="Number of mentions",
+       title="Business Types Mentioned - <span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span>")+
+  geom_bar_text(family="Ubuntu")+
+  coord_flip()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(plot.title = element_markdown(color="black"),
+        legend.position = c(0.75,0.26),
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
+        axis.text.x = element_text(size=16),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        text = element_text(family='Ubuntu'))
+```
+
+Level 2, YouTube
+```{r}
+bus2filtyt <- 
+  bus2ctp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))
+
+ggplot(bus2filtyt,aes(x=fct_reorder(level2text,newn),y=newn,
+                      fill=level1))+
+  geom_col(linewidth=0.3,
+           color="black",width=0.75)+
+  scale_fill_pretty_d("Relax")+
+  labs(x="Business Type",
+       y="Number of mentions",
+       title="Business Types Mentioned - <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  geom_bar_text(family="Ubuntu")+
+  coord_flip()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(plot.title = element_markdown(color="black"),
+        legend.position = c(0.73,0.26),
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
+        axis.text.x = element_text(size=16),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        text = element_text(family='Ubuntu'))
 ```
 
 
@@ -844,14 +984,53 @@ tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>%
   distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% mutate(source="TikTok") 
 
 bind_rows(ytbus1earn,ttbus1earn) %>% add_count(business_type_level_1) %>% 
-ggplot()+
-  geom_sina(aes(x=fct_reorder(business_type_level_1,n),
-                  y=hourly_earn,fill=business_type_level_1, ),color="black",pch=21,size=3)+
-  scale_fill_manual(values= c("#0060df","#003eaa","#46B100","#46A5FF","#F3B71F"), guide="none")+labs(x="Business Type",
-                                          y="Hourly earnings (USD)")+
-  coord_flip()+theme(text = element_text(size=25))
+  ggplot(aes(y=fct_reorder(business_type_level_1,n),
+             x=hourly_earn,fill=fct_reorder(business_type_level_1,n)))+
+stat_binline(scale=1.21,bins=41,size=0.3)+
+  labs(x="Hourly earnings (USD)",
+       title = "Hourly Earnings by Business Type")+
+  scale_fill_pretty_d("Relax",guide="none")+
+  scale_x_continuous(limits = c(-30,1000),expand = c(0,0),
+    labels=scales::dollar_format())+
+  scale_y_discrete(expand = c(0.02, 0)) +
+    theme(axis.title.y = element_blank(),
+        axis.line.y = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(color="black"))
 ```
 
+level2
+```{r}
+ytbus2earn <- 
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% mutate(source="YouTube") 
+
+ttbus2earn <- 
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% mutate(source="TikTok") 
+
+bind_rows(ytbus2earn,ttbus2earn) %>% add_count(business_type_level_2) %>% 
+    separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) %>% filter(n>3) %>%  mutate(level2=str_remove(level2,"\\(.*\\)"))  %>% 
+  ggplot(aes(y=fct_reorder(level2,n),
+             x=hourly_earn,fill=level1))+
+stat_binline(scale=1.21,bins=41,size=0.3)+
+  labs(x="Hourly earnings (USD)",
+       title = "Hourly Earnings by Business Type")+
+  scale_fill_pretty_d("Relax")+
+  scale_x_continuous(limits = c(-30,1000),expand = c(0,0),
+    labels=scales::dollar_format())+
+  scale_y_discrete(expand = c(0.02, 0)) +
+    theme(axis.title.y = element_blank(),
+          axis.text.y = element_text(family = "Ubuntu Thin"),
+        axis.line.y = element_blank(),
+        legend.title = element_blank(),
+        legend.justification = "right",
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(color="black"))
+```
+
+
+#### business level 2
 ## Top earners
 
 On YouTube, these three videos (from three different creators) report the highest earnings.
