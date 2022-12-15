@@ -169,6 +169,56 @@ theme_update(plot.margin = margin(30, 30, 30, 30),
              strip.text = element_text(face = "bold",
                                        margin = margin(b = 10)))
 
+
+theme_rmdcustom <- 
+  function(){
+  ggthemes::theme_clean(base_size = 12, base_family = "Ubuntu")+
+  theme(plot.margin = margin(30, 30, 30, 30),
+             plot.background = element_rect(color = "white",
+                                            fill = "white"),
+             plot.title = element_text(face = "bold",
+                                       lineheight = 1.05,
+                                       hjust = .5,
+                                       margin = margin(10, 0, 25, 0)),
+             plot.title.position = "plot",
+             plot.caption = element_text(color = "grey40",
+                                         margin = margin(20, 0, -20, 0)),
+             plot.caption.position = "plot",
+             axis.line.x = element_line(color = "black",
+                                        size = .8),
+             axis.line.y = element_line(color = "black",
+                                        size = .8),
+             axis.title.x = element_text(margin = margin(t = 20)),
+             axis.title.y = element_text(margin = margin(r = 10)),
+             axis.text = element_text(color = "black",
+                                      ),
+             axis.text.x = element_text(margin = margin(t = 10)),
+             axis.text.y = element_text(margin = margin(r = 4)),
+             axis.ticks = element_blank(),
+             panel.grid.major.x = element_blank(),
+             panel.grid.major.y = element_blank(),
+             panel.grid.minor.x = element_blank(),
+             panel.grid.minor.y = element_blank(),
+             panel.spacing.x = unit(4, "lines"),
+             panel.spacing.y = unit(2, "lines"),
+             legend.position = "top",
+             legend.title = element_text(family = "Ubuntu",
+                                         color="black",
+                                         margin = margin(5, 0, 5, 0)),
+             legend.text = element_text(family = "Ubuntu",
+                                        color = "black",
+                                        margin = margin(4, 4, 4, 4)),
+             legend.background = element_rect(fill = "white",
+                                              color = "#eaeaea"),
+             legend.key = element_rect(color = "#eaeaea", fill = "white"),
+             #legend.key.width = unit(5, "lines"),
+             #legend.spacing.x = unit(.05, "pt"),
+             #legend.spacing.y = unit(.55, "pt"),
+             #legend.margin = margin(0, 0, 10, 0),
+             strip.text = element_text(face = "bold",
+                                       margin = margin(b = 10)))
+  }
+  
 ## theme settings for flipped plots
 theme_flip <-
   theme(panel.grid.minor.x = element_blank(),
@@ -274,13 +324,18 @@ Publication month also varied between platforms.
 youtube_data %>% count(month) %>% 
   ggplot()+
   geom_bar(aes(x=month,y=n),stat = "identity")+
-  scale_x_discrete(limits=month.abb) +labs(subtitle = "YouTube data")
+  scale_x_discrete(limits=month.abb) +
+  labs(subtitle = "YouTube data",y="Number of videos",x="Month")+
+  theme_rmdcustom()
 
  
 tiktok_data %>% count(month) %>% 
   ggplot()+
   geom_bar(aes(x=month,y=n),stat = "identity")+
-  scale_x_discrete(limits=month.abb) +labs(subtitle = "TikTok data")
+  scale_x_discrete(limits=month.abb) +
+  labs(subtitle = "YouTube data",y="Number of videos",x="Month")+
+  theme_rmdcustom()
+
 ```
 
 
@@ -298,33 +353,36 @@ ytdatevc <- youtube_data %>% select(source,pub_date,
 dates_views_comments <- bind_rows(ttdatevc,ytdatevc)
 
 ggplot(dates_views_comments)+
-  geom_point(aes(x=pub_date,y=views,color=source))+
-  labs(x="Publication date")
+  geom_point(aes(x=pub_date,y=views,fill=source),color="black",pch=21)+
+  labs(y="Views",x="Publication date")+theme_rmdcustom()+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 ggplot(dates_views_comments)+
-  geom_point(aes(x=pub_date,y=comments,color=source))+
-    labs(x="Publication date")
+  geom_point(aes(x=pub_date,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Publication date",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 ggplot(dates_views_comments)+
-  geom_point(aes(x=views,y=comments,color=source))
-
+  geom_point(aes(x=views,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Views",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 ggplot(dates_views_comments)+
-  geom_point(aes(x=followers,y=comments,color=source))
+  geom_point(aes(x=followers,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 dates_views_comments %>% filter(followers!=44100000) %>% 
 ggplot()+
-  geom_point(aes(x=followers,y=comments,color=source))+
-  labs(subtitle = "removed outlier")
-
-ggplot(dates_views_comments)+
-  geom_point(aes(x=followers,y=views,color=source))
+  geom_point(aes(x=followers,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Comments",subtitle = "Outliers removed")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 dates_views_comments %>% filter(followers!=44100000) %>% 
 ggplot()+
-  geom_point(aes(x=followers,y=views,color=source))+
-  labs(subtitle = "removed outlier")
-
+  geom_point(aes(x=followers,y=views,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Views",subtitle = "Outliers removed")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 ```
 
 
@@ -387,7 +445,14 @@ ageplt <-
         plot.title = element_text(color="black"),
         panel.grid.major.x =  element_blank())
 
-ageplt+gendplt+plot_annotation(title="Presenter Demographics",theme = theme(plot.title=element_text(color="black")))
+
+# for export
+ageplt+gendplt+plot_annotation(title="Presenter Demographics",theme = 
+  theme(plot.title=element_text(color="black")))
+
+ggsave(here::here("plots", "presenter_demographics.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+
 
 ```
 
@@ -516,6 +581,10 @@ bind_rows(yt_hourly_earn,tt_hourly_earn) %>%
         plot.subtitle = element_markdown(hjust = 1,face = "bold"),
         axis.line.y = element_blank(),
         legend.position = c(0.8,0.8),text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "earnings_by_platform.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+
 ```
 For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
 
@@ -544,7 +613,11 @@ This distribution is also evident within earnings timeframes.
 bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
   ggplot()+
   geom_histogram(aes(earn))+
-  facet_wrap(~earnings_timeframe,scales = 'free')
+  facet_wrap(~earnings_timeframe,scales = 'free',ncol = 2)+
+  labs(x="Earnings (USD",y="Number of activities")+
+  scale_x_continuous(labels=scales::dollar_format())+
+  theme_rmdcustom()+theme(panel.spacing.x = unit(0.29, "lines"))
+  
 ```
 
 ### Earnings by category (YouTube)
@@ -566,9 +639,6 @@ yt_hourlycorrs_chp %>%
                                    med_earn=median(hourly_earn)) %>% 
   arrange(-mean_earn) %>% gt()
 
-yt_hourlycorrs_chp %>% 
-  ggplot(aes(x=category,y=hourly_earn,color=category))+
-  geom_sina() + scale_color_discrete(guide="none")
 ```
 
 ## Business types and activities
@@ -617,15 +687,7 @@ yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>%
 \
 However, there is considerable variation in earnings across the different business types
 
-```{r}
-yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
-  distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% 
-  ggplot()+
-  geom_sina(aes(x=str_wrap(business_type_level_1,12),
-                  y=hourly_earn,color=business_type_level_1))+
-  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")
 
-```
 
 ### YouTube - Level 2
 ```{r eda yt2}
@@ -634,6 +696,7 @@ yt_bus2 <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
 n_bus2 <- youtube_data_activities %>% distinct(business_type_level_2) %>% nrow()
 maxnbus2 <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
     distinct(yt_video_id,idea,business_type_level_2) %>% ungroup() %>% group_by(yt_video_id,idea) %>% summarise(nbus2=n()) %>% arrange(-nbus2) %>% pull(nbus2) %>% max()
+
 ```
 
 
@@ -677,7 +740,8 @@ yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>%
   geom_sina(aes(x=str_wrap(business_type_level_2,33),
                   y=hourly_earn,color=business_type_level_2))+
   scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
-  coord_flip()+labs(x="Business Type Level 2")
+  scale_y_continuous(labels = scales::dollar_format())+
+  coord_flip()+labs(x="Business Type Level 2",y="Hourly earnings (USD)")+theme_rmdcustom()
 
 ```
 
@@ -730,15 +794,6 @@ tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>%
   
 However, with some exceptions, earnings do not vary considerably across the different business types
 
-```{r}
-tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>% 
-  distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% 
-  ggplot()+
-  geom_jitter(aes(x=str_wrap(business_type_level_1,12),
-                  y=hourly_earn,color=business_type_level_1))+
-  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)",subtitle = "TikTok")
-```
-
 
 ```{r}
 
@@ -769,9 +824,22 @@ tt_hourly_renamed <-  tt_hourlycorrs_chp %>%
 
 hourlyboth <- bind_rows(yt_hourly_renamed,tt_hourly_renamed)
 
-ggplot(hourlyboth)+aes(x=views,y=earn,color=source)+geom_point()
-ggplot(hourlyboth)+aes(x=comments,y=earn,color=source)+geom_point()
-ggplot(hourlyboth)+aes(x=followers,y=earn,color=source)+geom_point()
+ggplot(hourlyboth)+aes(x=views,y=earn,fill=source)+geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Views",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(hourlyboth)+aes(x=comments,y=earn,fill=source)+
+  geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Comments",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(hourlyboth)+
+  aes(x=followers,y=earn,fill=source)+geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Followers",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 ```
 
 ### TikTok - Level 2
@@ -830,7 +898,9 @@ tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>%
   geom_sina(aes(x=str_wrap(business_type_level_2,33),
                   y=hourly_earn,color=business_type_level_2))+
   scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
-  coord_flip()+labs(x="Business Type Level 2")
+  labs(y="Hourly earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  coord_flip()+labs(x="Business Type Level 2")+theme_rmdcustom()
 
 ```
 
@@ -840,7 +910,7 @@ bus1ct <- bus1ct %>% na.omit %>% mutate(source="YouTube")
 tt_bus1ct <- tt_bus1ct %>% na.omit %>% mutate(source="TikTok")
 
 xlabsdf <- bind_rows(bus1ct,tt_bus1ct) %>% distinct(business_type_level_1) %>% mutate(x=1:5,y=1)
-xlabsdf
+
 
 bind_rows(bus1ct,tt_bus1ct) %>% 
 ggplot(aes(x=fct_reorder(business_type_level_1,n),y=n,fill=source,
@@ -864,13 +934,15 @@ ggplot(aes(x=fct_reorder(business_type_level_1,n),y=n,fill=source,
         text = element_text(family='Ubuntu'))+
   coord_flip()
 
-
-
+# export
+ggsave(here::here("plots", "business_types_platform.png"), 
+          width = 12.5, height = 8, dpi = "retina")
 
 ```
 
 
 ### Share of business types (Level 2) by platform
+
 ```{r, fig.width=15}
 bus2ctp <- bus2ct %>% na.omit %>% mutate(source="YouTube")%>% 
   separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) 
@@ -883,40 +955,16 @@ bus2cttp %>%
   group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
   ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
 
-ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
-                      fill=level1))+
-  geom_col(linewidth=0.3,
-           position = "dodge",color="black",width=0.75)+
-  scale_fill_pretty_d("Relax")+
-  labs(x="Business Type",
-       y="Number of mentions",
-       title="Business Types Mentioned - <span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span>")+
-  geom_bar_text(family="Ubuntu")+
-  coord_flip()+
-  scale_y_continuous(expand = c(0,0))+
-  theme(plot.title = element_markdown(color="black"),
-        legend.position = c(0.85,0.26),
-        axis.line.x = element_blank(), 
-        axis.title.y = element_blank(),
-        legend.title = element_blank(),
-        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
-        axis.text.x = element_text(size=16),
-        panel.grid.major.x = element_blank(),
-        panel.grid.major.y = element_blank(),
-        text = element_text(family='Ubuntu'))
-
-
 ```
 
 Level 2, tiktok
-```{r}
+```{r, fig.width=15}
 bus2filttt <- 
 bus2cttp %>% 
   mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
   group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
   ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
 
-bus2filttt
 ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
                       fill=level1))+
   geom_col(linewidth=0.3,
@@ -938,6 +986,9 @@ ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
         panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_blank(),
         text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "tt_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
 ```
 
 Level 2, YouTube
@@ -969,6 +1020,9 @@ ggplot(bus2filtyt,aes(x=fct_reorder(level2text,newn),y=newn,
         panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_blank(),
         text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "yt_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
 ```
 
 
@@ -997,6 +1051,9 @@ stat_binline(scale=1.21,bins=41,size=0.3)+
         axis.line.y = element_blank(),
         panel.grid.major.x = element_blank(),
         plot.title = element_text(color="black"))
+
+ggsave(here::here("plots", "earnings_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
 ```
 
 level2
@@ -1027,6 +1084,9 @@ stat_binline(scale=1.21,bins=41,size=0.3)+
         legend.justification = "right",
         panel.grid.major.x = element_blank(),
         plot.title = element_text(color="black"))
+
+ggsave(here::here("plots", "earnings_business_types_level2.png"), 
+          width = 12.5, height = 8, dpi = "retina")
 ```
 
 
@@ -1076,7 +1136,10 @@ summarise(n_skills=n()) %>% ungroup()%>% mutate(source="TikTok") %>%
 
 bind_rows(skills_per_idea_tt,skills_per_idea_yt) %>% 
 ggplot()+
-  geom_histogram(aes(x=n_skills,fill=source))
+  geom_histogram(aes(x=n_skills,fill=source))+
+  theme_rmdcustom()+
+  labs(x="Number of skills mentioned",y="Number of videos")+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 ```
 
 The makeup of required skills also varied across platforms.  
@@ -1169,9 +1232,13 @@ Additionally, TikTok videos report significantly higher earnings for the same sk
 ```{r}
 ytskearnsummary <- ytskillearn %>% mutate(source="YouTube")
 ttskearnsummary <- ttskillearn %>% mutate(source="TikTok")
+
 bind_rows(ytskearnsummary,ttskearnsummary) %>% 
   ggplot()+
-  geom_bar(aes(x=fct_reorder(skills_required,mean_earn),y=mean_earn,fill=source),stat="identity",position = "dodge")+coord_flip()+labs(x='skill')
+  geom_bar(aes(x=fct_reorder(skills_required,mean_earn),y=mean_earn,fill=source),stat="identity",position = "dodge")+coord_flip()+
+    theme_rmdcustom()+labs(x="Skills",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 ```
 
 The variation and spread of earnings by skill is consistent across platforms.
@@ -1180,8 +1247,11 @@ The variation and spread of earnings by skill is consistent across platforms.
 
 bind_rows(ytskillearns,ttskillearns) %>% 
   ggplot(aes(x=fct_reorder(skills_required,hourly_earn),y=hourly_earn,color=source))+
-  geom_sina()+labs(x='skill')+
-  coord_flip()
+  geom_sina()+labs(x="Skills",y="Earnings (USD)")+
+  coord_flip()+
+  theme_rmdcustom()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
 
 
 ```
@@ -1203,7 +1273,8 @@ skillsearntt <- left_join(skills_per_idea_tt,tt_hourly_earn)
 skillsearnyt <- left_join(skills_per_idea_yt,yt_hourly_earn)
 bind_rows(skillsearntt,skillsearnyt) %>% 
   ggplot(aes(x=factor(n_skills),hourly_earn))+geom_boxplot()+
-  labs(x="number of skills required per money-making idea",y="standardized earnings")
+  scale_y_continuous(labels = scales::dollar_format())+
+  labs(x="Number of skills required per money-making idea",y="Earnings (USD)")+theme_rmdcustom()
 ```
 
 
@@ -1245,13 +1316,13 @@ top15bg <- bind_rows(bg_yt,bg_tt)
 
 ggplot(top15wrds)+
   geom_lollipop(aes(x=fct_reorder(title_wrd,n),y=n))+
-  facet_wrap(~source)+labs(x="word or hashtag",y='occurrences')+
-  coord_flip()
+  facet_wrap(~source)+labs(x="word or hashtag",y='Occurrences')+
+  coord_flip()+theme_rmdcustom()+theme(panel.spacing.x = unit(0.26,"lines"))
 
 ggplot(top15bg)+
   geom_lollipop(aes(x=fct_reorder(title_bg,n),y=n))+
-  facet_wrap(~source)+labs(x="bigram",y='occurrences')+
-  coord_flip()
+  facet_wrap(~source)+labs(x="Bigram",y='Occurrences')+
+  coord_flip()+theme_rmdcustom()+theme(panel.spacing.x = unit(0.26,"lines"))
 ```
   
     

@@ -1,0 +1,1330 @@
+---
+title: "WP beginner - How to make money"
+author: "LDVA"
+date: "Last updated on `r Sys.Date()`"
+output:
+  html_document:
+    theme: paper
+    highlight: kate
+    code_folding: hide
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{=html}
+<style>
+.list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus {
+  background-color: #00d188;
+  border-color: #00d188;
+}
+
+body {
+  font-family: Ubuntu;
+  color: #444444;
+  font-size: 14px;
+}
+
+h1 {
+  font-weight: bold;
+  font-size: 28px;
+}
+
+h1.title {
+  font-size: 30px;
+  color: #00d188;
+}
+
+h2 {
+  font-size: 24px;
+}
+
+h3 {
+  font-size: 18px;
+}
+</style>
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, dpi = 700) #, fig.showtext = TRUE, )
+
+knitr::knit_hooks$set(inline = function(x) {
+  prettyNum(x, big.mark = ",", small.mark = ",", scientific = F)
+})
+
+Sys.setlocale("LC_TIME", "C")
+extrafont::loadfonts()
+```
+
+```{r prep}
+## packages: remove or add your necessary packages
+
+required_packages <- c("tidyverse", "readxl", "ggthemes", "hrbrthemes", "extrafont", "plotly", "scales", "stringr", "gganimate", "here", "tidytext", "sentimentr", "scales", "DT", "here", "sm", "mblm", "glue", "fs", "knitr", "rmdformats", "janitor", "urltools", "colorspace", "pdftools")
+
+library(ggplot2)    # CRAN v3.3.6
+library(colorspace) # CRAN v2.0-3
+library(here)       # CRAN v1.0.1
+library(dplyr)      # CRAN v1.0.10
+library(janitor)    # CRAN v2.1.0
+library(gt)         # CRAN v0.5.0
+library(tidyr)      # CRAN v1.2.1
+library(readr)      # CRAN v2.1.3
+library(stringr)    # CRAN v1.4.1
+library(tidytext)
+library(ggalt)
+library(ggchicklet)
+library(ggridges)
+library(PrettyCols)
+library(forcats)
+library(ggfittext)
+library(lubridate)
+library(ggforce)
+library(ggtext)
+library(patchwork)
+
+# for(i in required_packages) { 
+# if(!require(i, character.only = T)) {
+# 
+# #  if package is not existing, install then load the package
+# install.packages(i, dependencies = T)
+# require(i, character.only = T)
+# }
+# }
+
+
+## save plots?
+save <- TRUE
+#save <- FALSE
+
+## quality of png's
+dpi <- 750
+
+## font adjust; please adjust to client´s website
+#extrafont::loadfonts(device = "win", quiet = TRUE)
+#font_add_google("Montserrat", "Montserrat")
+# font_add_google("Overpass", "Overpass")
+# font_add_google("Overpass Mono", "Overpass Mono")
+
+
+
+## theme updates; please adjust to client´s website
+#theme_set(ggthemes::theme_clean(base_size = 15))
+theme_set(ggthemes::theme_clean(base_size = 20, base_family = "Ubuntu"))
+
+
+theme_update(plot.margin = margin(30, 30, 30, 30),
+             plot.background = element_rect(color = "white",
+                                            fill = "white"),
+             plot.title = element_text(size = 25,
+                                       face = "bold",
+                                       lineheight = 1.05,
+                                       hjust = .5,
+                                       margin = margin(10, 0, 25, 0)),
+             plot.title.position = "plot",
+             plot.caption = element_text(color = "grey40",
+                                         size = 9,
+                                         margin = margin(20, 0, -20, 0)),
+             plot.caption.position = "plot",
+             axis.line.x = element_line(color = "black",
+                                        size = .8),
+             axis.line.y = element_line(color = "black",
+                                        size = .8),
+             axis.title.x = element_text(size = 22,
+                                         margin = margin(t = 20)),
+             axis.title.y = element_text(size = 22,
+                                         margin = margin(r = 20)),
+             axis.text = element_text(size = 19,
+                                      color = "black",
+                                      ),
+             axis.text.x = element_text(margin = margin(t = 10)),
+             axis.text.y = element_text(margin = margin(r = 10)),
+             axis.ticks = element_blank(),
+             panel.grid.major.x = element_line(size = .6,
+                                               color = "#eaeaea",
+                                               linetype = "solid"),
+             panel.grid.major.y = element_line(size = .6,
+                                               color = "#eaeaea",
+                                               linetype = "solid"),
+             panel.grid.minor.x = element_blank(),
+             panel.grid.minor.y = element_blank(),
+             panel.spacing.x = unit(4, "lines"),
+             panel.spacing.y = unit(2, "lines"),
+             legend.position = "top",
+             legend.title = element_text(family = "Ubuntu",
+                                         size = 16, color="black",
+                                         margin = margin(5, 0, 5, 0)),
+             legend.text = element_text(family = "Ubuntu",
+                                        color = "black",
+                                        size = 16,
+                                        margin = margin(4, 4, 4, 4)),
+             legend.background = element_rect(fill = "white",
+                                              color = "#eaeaea"),
+             legend.key = element_rect(color = "#eaeaea", fill = "white"),
+             #legend.key.width = unit(5, "lines"),
+             #legend.spacing.x = unit(.05, "pt"),
+             #legend.spacing.y = unit(.55, "pt"),
+             #legend.margin = margin(0, 0, 10, 0),
+             strip.text = element_text(face = "bold",
+                                       margin = margin(b = 10)))
+
+
+theme_rmdcustom <- 
+  function(){
+  ggthemes::theme_clean(base_size = 12, base_family = "Ubuntu")+
+  theme(plot.margin = margin(30, 30, 30, 30),
+             plot.background = element_rect(color = "white",
+                                            fill = "white"),
+             plot.title = element_text(face = "bold",
+                                       lineheight = 1.05,
+                                       hjust = .5,
+                                       margin = margin(10, 0, 25, 0)),
+             plot.title.position = "plot",
+             plot.caption = element_text(color = "grey40",
+                                         margin = margin(20, 0, -20, 0)),
+             plot.caption.position = "plot",
+             axis.line.x = element_line(color = "black",
+                                        size = .8),
+             axis.line.y = element_line(color = "black",
+                                        size = .8),
+             axis.title.x = element_text(margin = margin(t = 20)),
+             axis.title.y = element_text(margin = margin(r = 10)),
+             axis.text = element_text(color = "black",
+                                      ),
+             axis.text.x = element_text(margin = margin(t = 10)),
+             axis.text.y = element_text(margin = margin(r = 4)),
+             axis.ticks = element_blank(),
+             panel.grid.major.x = element_blank(),
+             panel.grid.major.y = element_blank(),
+             panel.grid.minor.x = element_blank(),
+             panel.grid.minor.y = element_blank(),
+             panel.spacing.x = unit(4, "lines"),
+             panel.spacing.y = unit(2, "lines"),
+             legend.position = "top",
+             legend.title = element_text(family = "Ubuntu",
+                                         color="black",
+                                         margin = margin(5, 0, 5, 0)),
+             legend.text = element_text(family = "Ubuntu",
+                                        color = "black",
+                                        margin = margin(4, 4, 4, 4)),
+             legend.background = element_rect(fill = "white",
+                                              color = "#eaeaea"),
+             legend.key = element_rect(color = "#eaeaea", fill = "white"),
+             #legend.key.width = unit(5, "lines"),
+             #legend.spacing.x = unit(.05, "pt"),
+             #legend.spacing.y = unit(.55, "pt"),
+             #legend.margin = margin(0, 0, 10, 0),
+             strip.text = element_text(face = "bold",
+                                       margin = margin(b = 10)))
+  }
+  
+## theme settings for flipped plots
+theme_flip <-
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_line(size = .6,
+                                          color = "#eaeaea"))
+
+## theme settings for maps
+theme_map <- 
+  theme_void(base_family = "Ubuntu") +
+  theme(legend.direction = "horizontal",
+        legend.box = "horizontal",
+        legend.margin = margin(10, 10, 10, 10),
+        legend.title = element_text(size = 17, 
+                                    face = "bold"),
+        legend.text = element_text(color = "grey33",
+                                   size = 12),
+        plot.margin = margin(15, 5, 15, 5),
+        plot.title = element_text(face = "bold",
+                                  size = 20,
+                                  hjust = .5,
+                                  margin = margin(30, 0, 10, 0)),
+        plot.subtitle = element_text(face = "bold",
+                                     color = "grey33",
+                                     size = 17,
+                                     hjust = .5,
+                                     margin = margin(10, 0, -30, 0)),
+        plot.caption = element_text(size = 14,
+                                    color = "grey33",
+                                    hjust = .97,
+                                    margin = margin(-30, 0, 0, 0)),
+        panel.grid.minor = element_blank())
+
+## numeric format for labels
+num_format <- scales::format_format(big.mark = ",", small.mark = ",", scientific = F)
+
+## main color backlinko
+bl_col <- "#00d188"
+bl_dark <- darken(bl_col, .3, space = "HLS")
+
+## colors + labels for interval stripes
+int_cols <- c("#bce2d5", "#79d8b6", bl_col, "#009f66", "#006c45", "#003925")
+int_perc <- c("100%", "95%", "75%", "50%", "25%", "5%")
+
+```
+
+## Load data
+
+```{r}
+youtube_data <- read_csv(here("proc_data","youtube_data_proc.csv"))
+youtube_data_activities <- read_csv(here("proc_data","youtube_data_activities_proc.csv"))
+tiktok_data <-  read_csv(here("proc_data","tiktok_data_proc.csv"))
+tiktok_data_activities <-  read_csv(here("proc_data","tiktok_data_activities_proc.csv"))
+```
+
+### Calculate general stats
+```{r general stats}
+yt_vids <- youtube_data %>% distinct(yt_video_id) %>% nrow()
+tt_vids <- tiktok_data %>% distinct(tt_video_id) %>% nrow()
+```
+
+```{r}
+youtube_data_activities %>% group_by(yt_video_id) %>% summarise(idn=max(idea)) %>% 
+   pull(idn) %>% {length(which(.>1))}-> mult_ideas_yt
+tiktok_data_activities %>% group_by(tt_video_id) %>% summarise(idn=max(idea)) %>% 
+   pull(idn) %>% {length(which(.>1))} -> mult_ideas_tt
+
+meanytlength <- youtube_data$video_length %>% summary %>% {./60}
+meanttlength <- tiktok_data$video_meta_duration %>% summary 
+
+
+```
+
+## General stats
+
+**YouTube**: `r yt_vids` videos (unique video url identifiers, includes YT shorts)  
+**TikTok**: `r yt_vids` videos  
+
+YouTube videos are longer (`r meanytlength["Mean"]` minutes on average for the sampled videos), so approximately one third of the videos examined (`r mult_ideas_yt`/`r yt_vids`) included \>1 money-making idea. TikTok videos have a shorter maximum length (3 to 10 minutes; `r meanttlength["Mean"]` seconds on average for the sampled videos) so videos on this platform tend to feature a single idea. Only `r mult_ideas_tt` of the `r tt_vids` TikTok videos examined provided more than one money-making idea.
+
+### Publication dates
+
+```{r parse times}
+youtube_data <- youtube_data %>% mutate(month=month(ymd(youtube_data$publish_date)),
+                        pyear=year(ymd(youtube_data$publish_date))) %>% 
+  mutate(pub_date=ymd(publish_date))
+
+
+tiktok_data <- tiktok_data %>% mutate(month=month(ymd_hms(tiktok_data$create_time_iso)),                                pyear=year(ymd_hms(tiktok_data$create_time_iso))) %>%
+  mutate(pub_date=date(ymd_hms(create_time_iso))) 
+```
+
+3/4 of the YouTube videos examined were published in 2022, and across all the videos sampled (published since 2018), most are from the summer/fall season (Northern Hemisphere).
+
+TikTok videos in the sample were published between 2019-2022, with more videos uploaded with each passing year. The month with most uploads is July.
+
+```{r}
+tiktok_data %>% tabyl(pyear) %>% round(2)
+```
+
+Publication month also varied between platforms.
+
+```{r}
+youtube_data %>% count(month) %>% 
+  ggplot()+
+  geom_bar(aes(x=month,y=n),stat = "identity")+
+  scale_x_discrete(limits=month.abb) +
+  labs(subtitle = "YouTube data",y="Number of videos",x="Month")+
+  theme_rmdcustom()
+
+ 
+tiktok_data %>% count(month) %>% 
+  ggplot()+
+  geom_bar(aes(x=month,y=n),stat = "identity")+
+  scale_x_discrete(limits=month.abb) +
+  labs(subtitle = "YouTube data",y="Number of videos",x="Month")+
+  theme_rmdcustom()
+
+```
+
+
+Considering publication dates, videos published earlier do not tend to accumulate more views and comments over time. Engagement is also mostly unrelated to subscriber/follower counts and thus possibly related to content.
+
+```{r}
+ttdatevc <- tiktok_data %>% select(source,pub_date,
+                       comments=comment_count,
+                       views=play_count,
+                       followers=author_meta_fans)
+ytdatevc <- youtube_data %>% select(source,pub_date,
+                       comments=comments,
+                       views=view_count,
+                       followers=subs_numeric)
+dates_views_comments <- bind_rows(ttdatevc,ytdatevc)
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=pub_date,y=views,fill=source),color="black",pch=21)+
+  labs(y="Views",x="Publication date")+theme_rmdcustom()+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=pub_date,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Publication date",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=views,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Views",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(dates_views_comments)+
+  geom_point(aes(x=followers,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Comments")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+dates_views_comments %>% filter(followers!=44100000) %>% 
+ggplot()+
+  geom_point(aes(x=followers,y=comments,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Comments",subtitle = "Outliers removed")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+dates_views_comments %>% filter(followers!=44100000) %>% 
+ggplot()+
+  geom_point(aes(x=followers,y=views,fill=source),color="black",pch=21)+
+    labs(x="Followers",y="Views",subtitle = "Outliers removed")+theme_rmdcustom()+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+```
+
+
+### Presenter demographics
+```{r}
+yt_presenter_demog_gend <- youtube_data %>% tabyl(presenter_gender) %>% 
+  mutate(valid_percent=round(valid_percent,2)) %>% mutate(source="YouTube")
+
+yt_malepct <- yt_presenter_demog_gend$valid_percent[2] 
+tt_presenter_demog_gend <- tiktok_data %>% tabyl(presenter_gender) %>% 
+  mutate(valid_percent=round(valid_percent,2)) %>% mutate(source="TikTok")
+tt_malepct <- tt_presenter_demog_gend$valid_percent[2] 
+yt_ages <- youtube_data %>% tabyl(presenter_age) %>% na.omit() %>% select(-percent) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% mutate(source="YouTube")
+tt_ages <- tiktok_data %>% tabyl(presenter_age) %>% na.omit() %>% select(-percent) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent)%>% mutate(source="TikTok")
+
+```
+
+Male presenters were represented more on both platforms (YouTube: `r yt_malepct`% and TikTok `r tt_malepct`%), and the 20-30 y.o. age category had the highest proportion with ~40%.
+
+```{r}
+gt(yt_ages) %>% tab_header("YouTube")
+gt(tt_ages) %>% tab_header("TikTok")
+```
+
+
+```{r}
+  gendplt <- 
+    bind_rows(tt_presenter_demog_gend,yt_presenter_demog_gend) %>% na.omit() %>%
+    ggplot(aes(x=source,y=valid_percent,fill=presenter_gender,label=presenter_gender))+
+    geom_chicklet()+
+    labs(x="Video Source",y="Presenter representation")+
+    scale_y_continuous(labels=scales::percent_format())+
+    geom_bar_text(family="Ubuntu",fullheight = T,size=23)+
+    scale_fill_pretty_d(name = "Relax",guide="none")+
+    theme(axis.line.y = element_blank(),
+          axis.line.x = element_blank(),
+          axis.title.x = element_blank(),
+          panel.grid.major.y =  element_blank(),
+      panel.grid.major.x =  element_blank())
+  
+
+  
+ageplt <- 
+    bind_rows(yt_ages,tt_ages) %>% 
+    filter(str_detect(presenter_age,"^[0-9]")) %>% 
+    ggplot(aes(x=fct_reorder(presenter_age,percent),y=n,fill=source,color=source))+
+    geom_bar(position = "dodge",stat="identity",width = 0.8)+
+  geom_bar_text(position = "dodge",family="Ubuntu")+  
+  labs(y="Number of videos",x="Presenter age",
+       subtitle="<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> & <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>",
+         caption = "Excludes text-to-speech or voice-over presenters")+
+    scale_fill_manual(values = c("#69c9d0","#FF0000"),guide="none")+
+    scale_color_manual(values=c("#ff0050","#282828"),guide="none")+
+  scale_x_discrete(expand = c(0.18,0))+  
+  scale_y_continuous(expand = c(0,0))+  
+  coord_flip()+
+  theme(plot.subtitle = element_markdown(face="bold"),
+        panel.grid.major.y =  element_blank(),
+        axis.line.y = element_blank(),
+        plot.title = element_text(color="black"),
+        panel.grid.major.x =  element_blank())
+
+
+# for export
+ageplt+gendplt+plot_annotation(title="Presenter Demographics",theme = 
+  theme(plot.title=element_text(color="black")))
+
+ggsave(here::here("plots", "presenter_demographics.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+
+
+```
+
+### Categories
+
+YouTube videos, as categorized by their authors, varied in assignment despite the similar overarching topic.
+
+The most common category was **Education**, followed by **How-to % Stlye**, and then all the others.
+
+```{r}
+youtube_data %>% tabyl(category) %>% arrange(-n) %>% 
+  mutate(across(where(is.numeric),round,2)) %>% gt() %>% tab_header(title = "YouTube data")
+```
+
+
+## Earnings data
+
+```{r earnings data} 
+
+ytearn <- 
+youtube_data_activities %>% 
+  mutate(earnings_1_unit=earnings/earnings_timeframe_number) %>% 
+  group_by(yt_video_id,idea,earnings_timeframe) %>% 
+  summarise(earn=mean(earnings_1_unit,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  filter(earnings_timeframe!="No timeframe provided")
+ttearn <- 
+  tiktok_data_activities %>% 
+  mutate(earnings_1_unit=earnings/earnings_timeframe_number) %>% 
+  group_by(tt_video_id,idea,earnings_timeframe) %>% 
+  summarise(earn=mean(earnings_1_unit,na.rm=TRUE)) %>% ungroup() %>% na.omit() %>% 
+  filter(earnings_timeframe!="No timeframe provided")
+
+# earnings time frames
+earn_tf <- bind_rows(ytearn,ttearn) %>% count(earnings_timeframe) %>% arrange(-n)
+
+earnings_by_tf <- 
+bind_rows(ytearn,ttearn) %>% group_by(earnings_timeframe) %>% 
+  summarize(median_earn=median(earn),
+            min_earn=min(earn),max_earn=max(earn),
+            sd_earn=sd(earn,na.rm = TRUE)) %>% arrange(-median_earn)
+```
+
+
+- The most common time frame for earnings was for daily income, followed by months and hours.
+
+
+
+```{r earnings tables}
+gt(earn_tf)
+```
+
+- Longer time frames report higher median earnings (per 1 unit of time, **_not standardized_**)
+
+```{r}
+gt(earnings_by_tf)%>% 
+  fmt_number(
+    columns = -earnings_timeframe,  
+    decimals = 1,
+    use_seps = FALSE
+  )
+```
+
+### Standardized earnings
+
+
+```{r}
+temporal_earn <- c("Days","Hours","Minutes","Months","Weeks","Years")
+
+yt_tempearn <- ytearn %>% filter(earnings_timeframe %in% temporal_earn)
+tt_tempearn <- ttearn %>% filter(earnings_timeframe %in% temporal_earn)
+
+yt_hourly_earn <- 
+yt_tempearn %>% mutate(hourly_earn=case_when(
+  earnings_timeframe=="Hours"~earn,
+  earnings_timeframe=="Minutes"~earn*60,
+  earnings_timeframe=="Days"~earn/8,
+  earnings_timeframe=="Weeks"~earn/40,
+  earnings_timeframe=="Months"~earn/200,
+  earnings_timeframe=="Years"~earn/2400
+)) %>% mutate(source="YouTube")
+
+tt_hourly_earn <- 
+  tt_tempearn %>% mutate(hourly_earn=case_when(
+    earnings_timeframe=="Hours"~earn,
+    earnings_timeframe=="Minutes"~earn*60,
+    earnings_timeframe=="Days"~earn/8,
+    earnings_timeframe=="Weeks"~earn/40,
+    earnings_timeframe=="Months"~earn/200,
+    earnings_timeframe=="Years"~earn/2400
+  )) %>% mutate(source="TikTok")
+
+all_earn <- bind_rows(yt_hourly_earn,tt_hourly_earn) 
+
+tt_h_earnsum <- 
+tt_hourly_earn %>% summarize(mean_earn=mean(hourly_earn),
+                             median_earn=median(hourly_earn))
+yt_h_earnsum <- 
+yt_hourly_earn %>% summarize(mean_earn=mean(hourly_earn),
+                             median_earn=median(hourly_earn))
+
+hourly_med <- median(all_earn$hourly_earn)
+
+
+
+bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
+  filter(hourly_earn<1300) %>% 
+  ggplot()+
+  geom_histogram(aes(hourly_earn,fill=source,color=source),
+                 linewidth=0.6,bins=25,position = "dodge")+
+  annotate(
+    geom = "curve", x = 810, y = 7, xend = 960, yend = 1, 
+    curvature = .1, arrow = arrow(length = unit(2, "mm"))
+  ) +
+  annotate(geom = "text", x = 360, y = 12,family="Ubuntu",size=5,
+           label = "Not shown:\nTwo videos suggesting $1500 and $1800 in earnings\n(one from YouTube, one from TikTok)", hjust = "left")+
+  labs(x="Hourly earnings (USD)",
+       y="Number of money-making activities",
+       title="Distribution of Hourly Earnings by Platform",
+       caption = "Videos often included >1 activites",
+       subtitle = "<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> &  <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  scale_fill_manual(values =c("#69c9d0","#FF0000"),guide="none")+
+  scale_x_continuous(labels=scales::dollar_format(),expand = c(0.01,0))+
+  scale_y_continuous(expand = c(0,0))+
+  scale_color_manual(values=c("#ff0050","#282828"),guide="none")+
+  theme(plot.title = element_text(color = "black"),
+        plot.subtitle = element_markdown(hjust = 1,face = "bold"),
+        axis.line.y = element_blank(),
+        legend.position = c(0.8,0.8),text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "earnings_by_platform.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+
+```
+For videos that report earnings associated with a temporal reference ($ earned per unit of time), earnings can be reported in a common unit by assuming 8 hour work days and 5 day work weeks. The median hourly earnings is `r hourly_med`.
+
+Once standardized, the timeframe with the highest median earnings was minutes. For this time frame, 18 of 20 videos suggest that it is possible to make between 1 and 30 USD per minute with their ideas. This becomes up to $1800 per hour.
+
+```{r}
+all_earn %>% group_by(earnings_timeframe) %>% 
+  summarize(median_earn=median(hourly_earn),
+            min_earn=min(hourly_earn),max_earn=max(hourly_earn),
+            sd_earn=sd(hourly_earn,na.rm = TRUE)) %>% arrange(-median_earn) %>% gt() %>% 
+  fmt_number(
+    columns = -earnings_timeframe,  
+    decimals = 1,
+    use_seps = FALSE
+  )
+```
+
+
+
+Across all videos, earnings are right-skewed. 90% of videos report hourly earnings < `r quantile(all_earn$hourly_earn,0.9)`.
+
+std hourly earnings varied by platform
+
+This distribution is also evident within earnings timeframes.
+```{r}
+bind_rows(yt_hourly_earn,tt_hourly_earn) %>% 
+  ggplot()+
+  geom_histogram(aes(earn))+
+  facet_wrap(~earnings_timeframe,scales = 'free',ncol = 2)+
+  labs(x="Earnings (USD",y="Number of activities")+
+  scale_x_continuous(labels=scales::dollar_format())+
+  theme_rmdcustom()+theme(panel.spacing.x = unit(0.29, "lines"))
+  
+```
+
+### Earnings by category (YouTube)
+
+The more common categories (Education, Howto & Style) did not report the higher mean or median standardized earnings. Instead, the People and Blogs category and Entertainment had the top two positions.
+
+```{r prep yt data}
+yt_hourlycorrs <- left_join(yt_hourly_earn,youtube_data_activities)
+
+yt_hourlycorrs_chp <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+```
+
+
+```{r}
+yt_hourlycorrs_chp %>% 
+  group_by(category) %>% summarise(mean_earn=mean(hourly_earn),
+                                   med_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn) %>% gt()
+
+```
+
+## Business types and activities
+
+
+### YouTube - Level 1
+
+For all YouTube videos, the predominant Business Type for the money-making ideas was **Publication, Media, and Blogs**, followed by the Service Business. Other business types were less common.
+
+```{r}
+# without earnings
+yt_acts_chp <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+yt_bus1 <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+bus1ct <- yt_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1) %>% 
+  tabyl(business_type_level_1) %>% arrange(-n)
+
+bus1ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% 
+  gt() %>% tab_header("YouTube",subtitle = "Business Types, all videos") 
+
+```
+
+\
+
+For videos and ideas with reported earnings, the business activity with the highest earnings (standardized) was **Publication, Media, & Blog**, followed by investing.
+
+```{r yt_business types w earnings}
+# with earninings
+
+yt_hourlycorrs_bus1 <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+unchop(business_type_level_1) %>%  ungroup()
+
+yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_1) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("YouTube",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+\
+However, there is considerable variation in earnings across the different business types
+
+
+
+### YouTube - Level 2
+```{r eda yt2}
+yt_bus2 <- youtube_data_activities  %>% group_by(yt_video_id,idea) %>%
+  unchop(business_type_level_2) %>%  ungroup()
+n_bus2 <- youtube_data_activities %>% distinct(business_type_level_2) %>% nrow()
+maxnbus2 <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
+    distinct(yt_video_id,idea,business_type_level_2) %>% ungroup() %>% group_by(yt_video_id,idea) %>% summarise(nbus2=n()) %>% arrange(-nbus2) %>% pull(nbus2) %>% max()
+
+```
+
+
+The second-level classification of Business Activities for making money includes many more categories (`r n_bus2`). Many combinations of Business Types were possible for each video/idea, but none included more than `r maxnbus2`.
+
+At this level no particular business type predominated, none represented >20% of suggested activities. The most frequent business type was **Publication, Media & Blog - Affiliate Marketing**, followed by **Service Business - Microwork/tasks (e.g. Taking surveys, searching for data, tagging content and identifying images)**. Other types were much less common.
+
+```{r level 2 no earnings}
+
+bus2ct <- yt_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2) %>% 
+  tabyl(business_type_level_2) %>% arrange(-n)
+
+bus2ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% filter(n>1) %>% 
+  gt() %>% tab_header("YouTube",subtitle = "Business Types (LEVEL 2), all videos") %>% tab_footnote(footnote = "n=1 not shown",
+                           locations = cells_column_labels(
+                             columns = n
+                           )) 
+```
+
+The Business type with the highest mean standardized earnings was **Publication, Media & Blog - Newsletter/ Articles**, followed by **Ecommerce & Consumer - Dropshipping** and other types in the Publication/Media/Blogging fields.
+
+```{r level 2 earnings}
+yt_hourlycorrs_bus2 <- yt_hourlycorrs  %>% group_by(yt_video_id,idea) %>%
+unchop(business_type_level_2) %>%  ungroup()
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_2) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("YouTube, Business Type Level 2",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+The five business types at this level with n>6 show a wide range of earnings.
+
+```{r}
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% add_count(business_type_level_2) %>% filter(n>6) %>% 
+  ggplot()+
+  geom_sina(aes(x=str_wrap(business_type_level_2,33),
+                  y=hourly_earn,color=business_type_level_2))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  coord_flip()+labs(x="Business Type Level 2",y="Hourly earnings (USD)")+theme_rmdcustom()
+
+```
+
+
+### TikTok - Level 1
+
+For TikTok videos, the predominant Business Type for the money-making ideas was **Service Business** with almost 50% of videos, followed by the **Ecommerce & Consumer** ventures. Other business types were less common.
+```{r}
+
+# tt without earnings
+tt_acts_chp <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+tt_bus1 <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+tt_bus1ct <- tt_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1)  %>% 
+  tabyl(business_type_level_1) %>% arrange(-n)
+
+
+tt_bus1ct %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% 
+  gt() %>% tab_header("TikTok",subtitle = "Business Types, all videos") 
+
+```
+
+  
+  
+For videos and ideas with reported earnings, the business activity with the highest earnings (standardized) was **Investing**, followed by **Ecommerce & Consumer**
+
+```{r}
+# tt with earninings
+tt_hourlycorrs <- left_join(tt_hourly_earn,tiktok_data_activities)
+
+tt_hourlycorrs_chp <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+  chop(business_type_level_1) %>% chop(business_type_level_2) %>% chop(skills_required) %>% ungroup()
+
+tt_hourlycorrs_bus1 <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_1) %>%  ungroup()
+
+tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_1) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt()
+
+```
+  
+  
+However, with some exceptions, earnings do not vary considerably across the different business types
+
+
+```{r}
+
+# 1 saving plots in pdf with example
+
+# ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color= drv)) + 
+#      geom_smooth(mapping = aes(linetype = drv), method = 'loess') +
+#      geom_point()
+# 
+# if(save == T){ 
+#   ggsave(here::here("plots", "name_plot.pdf"), 
+#          width = 12.5, height = 8, device = cairo_pdf)
+# }
+
+# 2 pdfs will then be converted into the pngs using the 04_convert_pdfs_to_pngs.rmd file. 
+```
+
+View counts, comments, followers, and standardized earnings are not tightly associated.
+
+```{r}
+
+yt_hourly_renamed <-  yt_hourlycorrs_chp %>%  
+  select(earn=hourly_earn,views=view_count,source,comments,followers=subs_numeric)
+  
+tt_hourly_renamed <-  tt_hourlycorrs_chp %>%  
+  select(earn=hourly_earn,views=play_count,source,comments=comment_count,
+           followers=author_meta_fans)
+
+hourlyboth <- bind_rows(yt_hourly_renamed,tt_hourly_renamed)
+
+ggplot(hourlyboth)+aes(x=views,y=earn,fill=source)+geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Views",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(hourlyboth)+aes(x=comments,y=earn,fill=source)+
+  geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Comments",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+ggplot(hourlyboth)+
+  aes(x=followers,y=earn,fill=source)+geom_point(color="black",pch=21)+
+  theme_rmdcustom()+labs(x="Followers",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+    scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+```
+
+### TikTok - Level 2
+
+```{r tt l2 eda}
+n_bus2tt <- tiktok_data_activities %>% distinct(business_type_level_2) %>% nrow()
+
+tt_bus2 <- tiktok_data_activities  %>% group_by(tt_video_id,idea) %>%
+  unchop(business_type_level_2) %>%  ungroup()
+maxnbus2tt <- tt_bus2 %>% group_by(tt_video_id,idea) %>% 
+    distinct(tt_video_id,idea,business_type_level_2) %>% ungroup() %>% group_by(tt_video_id,idea) %>% summarise(nbus2=n()) %>% arrange(-nbus2) %>% pull(nbus2) %>% max()
+```
+
+TikTok videos mentioned fewer (`r n_bus2tt`) Business Activities in this level than Youtube videos. Many combinations of Business Types were possible for each video/idea, but none included more than `r maxnbus2tt`.
+
+No particular business type predominated, none represented >20% of suggested activities. The most frequent business type was **Service Business - Microwork/tasks (e.g. Taking surveys, searching for data, tagging content and identifying images)**, followed by **Ecommerce & Consumer - Online shop on marketplaces (e.g. Ebay, Etsy)**. Other types were much less common.
+
+
+```{r tt level 2 all}
+
+
+bus2ctt <- tt_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2) %>% 
+  tabyl(business_type_level_2) %>% arrange(-n)
+
+bus2ctt %>% na.omit() %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% filter(n>1) %>% 
+  gt() %>% tab_header("TikTok",subtitle = "Business Types (LEVEL 2), all videos") %>% tab_footnote(footnote = "n=1 not shown",
+                           locations = cells_column_labels(
+                             columns = n
+                           )) 
+```
+
+
+The Business type with the highest mean standardized earnings was **Publication, Media & Blog - Write a blog** (although this result is driven by a single video stating $300000 in monthly earnings through this method). After that **Service Business - Furniture Flipping** and  **Investing - Stocks** have similar earnings, followed by various others.
+
+```{r level 2 earnings tt} 
+tt_hourlycorrs_bus2 <- tt_hourlycorrs  %>% group_by(tt_video_id,idea) %>%
+unchop(business_type_level_2) %>%  ungroup()
+
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup() %>% 
+  group_by(business_type_level_2) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-median_earn) %>% gt() %>% tab_header("TikTok, Business Type Level 2",
+                                                subtitle = "standardized hourly earning by business types")
+```
+
+
+The six business types at this level with n>5 also show a wide range of earnings.
+
+```{r}
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% add_count(business_type_level_2) %>% filter(n>5) %>% 
+  ggplot()+
+  geom_sina(aes(x=str_wrap(business_type_level_2,33),
+                  y=hourly_earn,color=business_type_level_2))+
+  scale_color_discrete(guide="none")+labs(x="Business Type (level 1)")+
+  labs(y="Hourly earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  coord_flip()+labs(x="Business Type Level 2")+theme_rmdcustom()
+
+```
+
+### Share of business types (Level 1) by platform
+```{r}
+bus1ct <- bus1ct %>% na.omit %>% mutate(source="YouTube")
+tt_bus1ct <- tt_bus1ct %>% na.omit %>% mutate(source="TikTok")
+
+xlabsdf <- bind_rows(bus1ct,tt_bus1ct) %>% distinct(business_type_level_1) %>% mutate(x=1:5,y=1)
+
+
+bind_rows(bus1ct,tt_bus1ct) %>% 
+ggplot(aes(x=fct_reorder(business_type_level_1,n),y=n,fill=source,
+               color=source,group=source))+
+  geom_col(linewidth=0.7,
+           position = "dodge",width = 0.8)+
+  labs(y="Number of mentions",
+       title="Business Types Mentioned by Platform",
+       subtitle = "<span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span> &  <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  geom_bar_text(position = "dodge",reflow = TRUE,family="Ubuntu",size=16)+
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_manual(values = c("#69c9d0","#FF0000"),guide='none')+
+  scale_color_manual(values=c("#ff0050","#282828"),guide='none')+
+  theme(plot.title = element_text(color = "black"),
+        legend.position = "bottom",
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        plot.subtitle = element_markdown(hjust = 1,face = "bold"),
+        text = element_text(family='Ubuntu'))+
+  coord_flip()
+
+# export
+ggsave(here::here("plots", "business_types_platform.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+
+```
+
+
+### Share of business types (Level 2) by platform
+
+```{r, fig.width=15}
+bus2ctp <- bus2ct %>% na.omit %>% mutate(source="YouTube")%>% 
+  separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) 
+bus2cttp<- bus2ctt %>% na.omit %>% mutate(source="TikTok")%>% 
+  separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) 
+
+bus2filttt <- 
+bus2cttp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
+
+```
+
+Level 2, tiktok
+```{r, fig.width=15}
+bus2filttt <- 
+bus2cttp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))  
+
+ggplot(bus2filttt,aes(x=fct_reorder(level2text,newn),y=newn,
+                      fill=level1))+
+  geom_col(linewidth=0.3,
+           position = "dodge",color="black",width=0.75)+
+  scale_fill_pretty_d("Relax")+
+  labs(x="Business type",
+       y="Number of mentions",
+       title="Business Types Mentioned - <span style = 'color: #69c9d0; font-family:Montserrat'>TikTok</span>")+
+  geom_bar_text(family="Ubuntu")+
+  coord_flip()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(plot.title = element_markdown(color="black"),
+        legend.position = c(0.75,0.26),
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
+        axis.text.x = element_text(size=16),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "tt_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+```
+
+Level 2, YouTube
+```{r}
+bus2filtyt <- 
+  bus2ctp %>% 
+  mutate(level2=if_else(n<4,paste0("Miscellaneous - ",level1),level2)) %>% 
+  group_by(level1,level2) %>% summarise(newn=sum(n)) %>% filter(newn>1) %>% 
+  ungroup() %>% mutate(level2text=str_remove(level2,"\\(.*\\)"))
+
+ggplot(bus2filtyt,aes(x=fct_reorder(level2text,newn),y=newn,
+                      fill=level1))+
+  geom_col(linewidth=0.3,
+           color="black",width=0.75)+
+  scale_fill_pretty_d("Relax")+
+  labs(x="Business Type",
+       y="Number of mentions",
+       title="Business Types Mentioned - <span style = 'color: #FF0000; font-family: Oswald'>YouTube</span>")+
+  geom_bar_text(family="Ubuntu")+
+  coord_flip()+
+  scale_y_continuous(expand = c(0,0))+
+  theme(plot.title = element_markdown(color="black"),
+        legend.position = c(0.73,0.26),
+        axis.line.x = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=14,family =" Ubuntu Thin" ),
+        axis.text.x = element_text(size=16),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        text = element_text(family='Ubuntu'))
+
+ggsave(here::here("plots", "yt_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+```
+
+
+## Earnings per business type
+
+```{r}
+ytbus1earn <- 
+yt_hourlycorrs_bus1 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% mutate(source="YouTube") 
+
+ttbus1earn <- 
+tt_hourlycorrs_bus1 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_1,hourly_earn) %>% ungroup %>% mutate(source="TikTok") 
+
+bind_rows(ytbus1earn,ttbus1earn) %>% add_count(business_type_level_1) %>% 
+  ggplot(aes(y=fct_reorder(business_type_level_1,n),
+             x=hourly_earn,fill=fct_reorder(business_type_level_1,n)))+
+stat_binline(scale=1.21,bins=41,size=0.3)+
+  labs(x="Hourly earnings (USD)",
+       title = "Hourly Earnings by Business Type")+
+  scale_fill_pretty_d("Relax",guide="none")+
+  scale_x_continuous(limits = c(-30,1000),expand = c(0,0),
+    labels=scales::dollar_format())+
+  scale_y_discrete(expand = c(0.02, 0)) +
+    theme(axis.title.y = element_blank(),
+        axis.line.y = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(color="black"))
+
+ggsave(here::here("plots", "earnings_business_types.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+```
+
+level2
+```{r}
+ytbus2earn <- 
+yt_hourlycorrs_bus2 %>% group_by(yt_video_id,idea) %>% 
+  distinct(yt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% mutate(source="YouTube") 
+
+ttbus2earn <- 
+tt_hourlycorrs_bus2 %>% group_by(tt_video_id,idea) %>% 
+  distinct(tt_video_id,idea,business_type_level_2,hourly_earn) %>% ungroup %>% mutate(source="TikTok") 
+
+bind_rows(ytbus2earn,ttbus2earn) %>% add_count(business_type_level_2) %>% 
+    separate(business_type_level_2,into=c("level1","level2"),sep=" - ") %>% mutate(across(c(level1,level2),str_squish)) %>% filter(n>3) %>%  mutate(level2=str_remove(level2,"\\(.*\\)"))  %>% 
+  ggplot(aes(y=fct_reorder(level2,n),
+             x=hourly_earn,fill=level1))+
+stat_binline(scale=1.21,bins=41,size=0.3)+
+  labs(x="Hourly earnings (USD)",
+       title = "Hourly Earnings by Business Type")+
+  scale_fill_pretty_d("Relax")+
+  scale_x_continuous(limits = c(-30,1000),expand = c(0,0),
+    labels=scales::dollar_format())+
+  scale_y_discrete(expand = c(0.02, 0)) +
+    theme(axis.title.y = element_blank(),
+          axis.text.y = element_text(family = "Ubuntu Thin"),
+        axis.line.y = element_blank(),
+        legend.title = element_blank(),
+        legend.justification = "right",
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(color="black"))
+
+ggsave(here::here("plots", "earnings_business_types_level2.png"), 
+          width = 12.5, height = 8, dpi = "retina")
+```
+
+
+#### business level 2
+## Top earners
+
+On YouTube, these three videos (from three different creators) report the highest earnings.
+```{r}
+yt_hourlycorrs_chp %>% slice_max(hourly_earn,n = 3) %>% select(video_url,title,author,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+
+On TikTok, these three videos (from three different creators) report the highest earnings.
+```{r}
+tt_hourlycorrs_chp %>% slice_max(hourly_earn,n = 3) %>% select(web_video_url,text,author_meta_nick_name,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+In particular, author **"Adam Enfroy"** appears on both of these platforms reporting 100-300k USD in monthly earnings.
+
+## Bottom earners
+
+```{r}
+yt_hourlycorrs_chp %>% slice_min(hourly_earn,n = 3) %>% select(video_url,title,author,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+```{r}
+tt_hourlycorrs_chp %>% slice_min(hourly_earn,n = 3) %>% select(web_video_url,text,author_meta_nick_name,earnings_timeframe,earn,hourly_earn) %>% gt()
+```
+
+
+## Skills
+
+Different money-making ideas on both platforms varied in the number of skills needed to generate earnings. For the most part, each idea needed only one or two different skills, and this was more evident on TikTok (much shorter videos with generally only one money-making idea).
+
+```{r}
+skills_per_idea_yt <- 
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+  group_by(yt_video_id,idea) %>%  distinct() %>% 
+summarise(n_skills=n()) %>% ungroup() %>% mutate(source="YouTube") %>% 
+    select(n_skills,source)
+
+skills_per_idea_tt <- 
+tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+  group_by(tt_video_id,idea) %>%  distinct() %>% 
+summarise(n_skills=n()) %>% ungroup()%>% mutate(source="TikTok") %>% 
+  select(n_skills,source)
+
+bind_rows(skills_per_idea_tt,skills_per_idea_yt) %>% 
+ggplot()+
+  geom_histogram(aes(x=n_skills,fill=source))+
+  theme_rmdcustom()+
+  labs(x="Number of skills mentioned",y="Number of videos")+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+```
+
+The makeup of required skills also varied across platforms.  
+
+On YouTube, the most mentioned skill was Marketing followed by Image or Video Editing.
+```{r}
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% distinct() %>% tabyl(skills_required) %>% arrange(-n) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% na.omit %>% gt() %>% tab_header(title = "YouTube")
+```
+
+When an idea or video required two or more skills, the most common combinations were Speaking + Video Editing, Investing + Marketing, Speaking + Writing, and Image + Video Editing.
+
+```{r}
+youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+  group_by(yt_video_id,idea) %>% 
+  arrange(yt_video_id, skills_required) %>% 
+  summarize(combination = paste0(skills_required, collapse = " - "), .groups = "drop") %>% 
+  count(combination) %>% 
+  filter(str_detect(combination," - ")) %>%  arrange(-n) %>% slice(1:10) %>% 
+  gt() %>% tab_header("YouTube Data", subtitle="Combinations of >2 skills, Top 10 most common combinations shown")
+```
+
+  
+    
+      
+TikTok videos favored Investing, followed by Marketing and Writing.
+
+```{r}
+tiktok_data_activities %>% group_by(tt_video_id,idea) %>% tabyl(skills_required) %>% arrange(-n) %>% mutate(percent=round(valid_percent,2)) %>% select(-valid_percent) %>% na.omit %>% gt() %>% tab_header(title = "TikTok")
+```
+
+Despite the fewer videos that required >1 skill, there were some frequently mentioned skill combinations such as Investing + Marketing, followed by Marketing+Programming+Video Editing+Web Development+Writing.
+
+```{r}
+tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+  group_by(tt_video_id,idea) %>% 
+  arrange(tt_video_id, skills_required) %>% 
+  summarize(combination = paste0(skills_required, collapse = " - "), .groups = "drop") %>% 
+  count(combination) %>% 
+  filter(str_detect(combination," - ")) %>%  arrange(-n) %>% slice(1:10) %>% 
+  gt() %>% tab_header("TikTok Data", subtitle="Combinations of >2 skills, Top 10 most common combinations shown")
+
+```
+
+## Skills and earnings
+
+Across both platforms, the Skill with the highest mean standardized earnings (hourly) was Investing, followed by Marketing, Video Editing, and Writing.
+
+```{r}
+ttskillearn <- 
+tt_hourlycorrs %>% select(tt_video_id,idea,hourly_earn,skills_required) %>% group_by(tt_video_id,idea) %>% distinct() %>% 
+  group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn) 
+
+ytskillearn <- 
+yt_hourlycorrs %>% select(yt_video_id,idea,hourly_earn,skills_required) %>% group_by(yt_video_id,idea) %>% distinct() %>% 
+  group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn)
+
+ytskillearns <- 
+yt_hourlycorrs %>% select(yt_video_id,idea,hourly_earn,skills_required) %>% group_by(yt_video_id,idea) %>% distinct() %>% 
+  ungroup %>%  mutate(source="YouTube")
+
+ttskillearns <-  
+tt_hourlycorrs %>% select(tt_video_id,idea,hourly_earn,skills_required) %>% group_by(tt_video_id,idea) %>% distinct() %>% 
+ungroup %>% mutate(source="TikTok")
+
+bothearn <- bind_rows(ytskillearns,ttskillearns) %>% group_by(skills_required) %>% 
+  summarise(mean_earn=mean(hourly_earn),
+            median_earn=median(hourly_earn)) %>% 
+  arrange(-mean_earn)
+
+gt(bothearn) %>% tab_header(title='all platforms',subtitle = "earnings by skill")
+
+```
+
+By platform, differences in reported earnings appear. 
+On YouTube, Marketing and Investing report the highest mean earnings.
+On TikTok, Video Editing and Investing report the highest earnings.
+
+```{r}
+gt(ytskillearn)%>% tab_header(title='YouTube',subtitle = "earnings by skill")
+gt(ttskillearn) %>% tab_header(title='TikTok',subtitle = "earnings by skill")
+```
+
+Additionally, TikTok videos report significantly higher earnings for the same skills compared with YouTube videos.
+```{r}
+ytskearnsummary <- ytskillearn %>% mutate(source="YouTube")
+ttskearnsummary <- ttskillearn %>% mutate(source="TikTok")
+
+bind_rows(ytskearnsummary,ttskearnsummary) %>% 
+  ggplot()+
+  geom_bar(aes(x=fct_reorder(skills_required,mean_earn),y=mean_earn,fill=source),stat="identity",position = "dodge")+coord_flip()+
+    theme_rmdcustom()+labs(x="Skills",y="Earnings (USD)")+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+```
+
+The variation and spread of earnings by skill is consistent across platforms.
+
+```{r}
+
+bind_rows(ytskillearns,ttskillearns) %>% 
+  ggplot(aes(x=fct_reorder(skills_required,hourly_earn),y=hourly_earn,color=source))+
+  geom_sina()+labs(x="Skills",y="Earnings (USD)")+
+  coord_flip()+
+  theme_rmdcustom()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  scale_fill_manual(values=c("#69c9d0","#FF0000"),name="Video Source")
+
+
+```
+
+More required skills did not relate with greater earnings.
+
+```{r}
+# skills_per_idea_ytid <- 
+# youtube_data_activities %>% select(yt_video_id,idea,skills_required) %>% 
+#   group_by(yt_video_id,idea) %>%  distinct() %>% 
+# summarise(n_skills=n()) %>% ungroup() %>% mutate(source="YouTube")  
+# 
+# skills_per_idea_ttid <- 
+# tiktok_data_activities %>% select(tt_video_id,idea,skills_required) %>% 
+#   group_by(tt_video_id,idea) %>%  distinct() %>% 
+# summarise(n_skills=n()) %>% ungroup()%>% mutate(source="TikTok")  
+
+skillsearntt <- left_join(skills_per_idea_tt,tt_hourly_earn)
+skillsearnyt <- left_join(skills_per_idea_yt,yt_hourly_earn)
+bind_rows(skillsearntt,skillsearnyt) %>% 
+  ggplot(aes(x=factor(n_skills),hourly_earn))+geom_boxplot()+
+  scale_y_continuous(labels = scales::dollar_format())+
+  labs(x="Number of skills required per money-making idea",y="Earnings (USD)")+theme_rmdcustom()
+```
+
+
+## Video titles
+
+In general, the video titles vary considerably across platforms in terms of length, content and style. 
+
+
+```{r}
+tiktok_data <-  tiktok_data %>% mutate(title_noHash=str_extract(text,"^[^#]*")) 
+yt_tlength <- round(mean(str_length(youtube_data$title)),0)
+tt_tlength <-round(mean(str_length(tiktok_data$text)))
+tt_tlength_nh <-round(mean(str_length(tiktok_data$title_noHash)))
+```
+
+Without various trailing hashtags, YouTube video titles are on average, twice as long as TikTok titles (`r yt_tlength` vs. `r tt_tlength_nh` characters). Overall, roughly a third of the length of TikTok titles comprises various hashtags.
+
+
+The words and bigrams (consecutive sequences of two words) that appear most frequently in the video's titles vary significantly between platforms.
+
+```{r}
+# tokenize 
+stopwords <- c("for","in","a","the","to","with","from","by")
+title_words_yt <- youtube_data %>% unnest_tokens(title_wrd,title,token = "words") %>% 
+  filter(!title_wrd %in% stopwords)
+title_bigrams_yt <- youtube_data %>% unnest_tokens(title_bg,title,token = "ngrams",n=2) 
+title_words_tt <- tiktok_data %>% unnest_tokens(title_wrd,text,token = "tweets") %>% 
+  filter(!title_wrd %in% stopwords)
+title_bigrams_tt <- title_words_tt %>% mutate(nextwrdbg=lead(title_wrd)) %>% 
+  unite(title_bg, title_wrd, nextwrdbg, sep = ' ')
+
+
+wordsyt <- title_words_yt %>% count(title_wrd) %>% slice_max(n,n=15) %>% mutate(source="YouTube")
+wordstt <- title_words_tt %>% count(title_wrd) %>% slice_max(n,n=15) %>% mutate(source="TikTok")
+bg_yt <- title_bigrams_yt %>% count(title_bg) %>% slice_max(n,n=15) %>% mutate(source="YouTube")
+bg_tt <- title_bigrams_tt %>% count(title_bg) %>% slice_max(n,n=15) %>% mutate(source="TikTok")
+top15wrds <- bind_rows(wordsyt,wordstt)
+top15bg <- bind_rows(bg_yt,bg_tt)
+
+ggplot(top15wrds)+
+  geom_lollipop(aes(x=fct_reorder(title_wrd,n),y=n))+
+  facet_wrap(~source)+labs(x="word or hashtag",y='Occurrences')+
+  coord_flip()+theme_rmdcustom()+theme(panel.spacing.x = unit(0.26,"lines"))
+
+ggplot(top15bg)+
+  geom_lollipop(aes(x=fct_reorder(title_bg,n),y=n))+
+  facet_wrap(~source)+labs(x="Bigram",y='Occurrences')+
+  coord_flip()+theme_rmdcustom()+theme(panel.spacing.x = unit(0.26,"lines"))
+```
+  
+    
+Considering the top 15 words or bigrams, there is little overlap between platforms.
+
